@@ -519,8 +519,8 @@ TEMPLATE_PRINT_NEKORAY = """
 # 名称：(custom)
 # 地址：{server_addr}
 # 端口：{listen_port}
-# 命令：-c %config%
 # 核心：hysteria2
+# 命令：-c %config%
 
 {nekoray_config}
 """

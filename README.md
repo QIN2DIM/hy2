@@ -61,12 +61,14 @@ Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria)
 
 4. **常用操作**
 
-   > 🚧 2023/09/02
+   > 🚧 2023/09/02 以下为预发行内容
    >
-   > 以下文档为预留内容，目前仅可以使用类似 NekoRay 的客户端引导 hysteria2 client ；而 sing-box，clash-meta 等项目会将 hy2 打包进工程重新编译分发，可能暂时还不支持 hysteria2 代理出站。
+   > 目前，你可以通过类似 NekoRay 这样的 Wrapper GUI引导 hysteria2 client，也可以通过命令行直接启动裸核。此外，你还可以通过最新版的 sing-box 运行 hysteria2 出站代理。
+   >
+   > clash-meta 尚未支持 hysteria2 代理出站。
 
    默认情况下会打印所有客户端配置，你可以通过可选的 `output-filter` 过滤指令仅输出 `NekoRay` / `clash-meta` / `sing-box` 的客户端出站配置：
-
+   
    | Client                                                       | Command                                                      |
    | ------------------------------------------------------------ | ------------------------------------------------------------ |
    | [NekoRay](https://matsuridayo.github.io/n-extra_core/)       | `python3 <(curl -fsSL https://ros.services/heyhy.py) install --neko` |
@@ -74,25 +76,25 @@ Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria)
    | [sing-box](https://sing-box.sagernet.org/configuration/outbound/tuic/) | `python3 <(curl -fsSL https://ros.services/heyhy.py) install --singbox` |
 
    你可以配合参数 `-d DOMAIN` 实现「一键输出」的效果，如：
-
+   
    ```bash
    python3 <(curl -fsSL https://ros.services/heyhy.py) install --singbox -d YOUR_DOMAIN
    ```
 
    首次安装后，你还可以使用别名缩写 `heyhy` 更新（覆盖）双端配置，如：
-
+   
    ```bash
    heyhy install --singbox -d YOUR_DOMAIN
    ```
 
    所有出站配置已在 `install` 指令后生成，`output-filter` 仅影响输出到屏幕的信息，你可以用 `check` 命令去查看它们，如：
-
+   
    ```bash
    heyhy check
    ```
 
    或搭配 `output-filter` 使用，效果和上文的一致：
-
+   
    ```bash
    heyhy check --neko
    ```

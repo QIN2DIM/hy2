@@ -27,13 +27,43 @@ Heyhy 用于快速部署 [hysteria-v2 server](https://github.com/apernet/hysteri
 
 2. **移除负载**
 
-   这个指令会移除与 `tuic-server` 有关的一切依赖。需要注意的是，你必须指明与 `tuic-server` 绑定的域名才能安全卸载证书。
+   这个指令会移除与 `hysteria2 server` 有关的一切依赖。需要注意的是，你必须指明与 `hysteria2 server` 绑定的域名才能安全卸载证书。
 
    ```shell
-   python3 <(curl -fsSL https://ros.services/heyhy.py) remove
+   python3 <(curl -fsSL https://ros.services/heyhy.py) remove -d YOUR_DOMAIN
    ```
 
-3. **常用操作**
+3. **查看所有指令**
+
+   查看 [项目 WiKi](https://github.com/QIN2DIM/hy2/wiki/Usage) 以获取完整的技术文档🐧
+
+   ```bash
+   $heyhy -h
+   
+   usage: heyhy [-h] {install,remove,check,status,log,start,stop,restart} ...
+   
+   Hysteria-v2 Scaffold (Python3.7+)
+   
+   positional arguments:
+     {install,remove,check,status,log,start,stop,restart}
+       install             Automatically install and run
+       remove              Uninstall services and associated caches
+       check               Print client configuration
+       status              Check hysteria2 service status
+       log                 Check hysteria2 service syslog
+       start               Start hysteria2 service
+       stop                Stop hysteria2 service
+       restart             restart hysteria2 service
+   
+   optional arguments:
+     -h, --help            show this help message and exit
+   ```
+
+4. **常用操作**
+
+   > 🚧 2023/09/02
+   >
+   > 以下文档为预留内容，目前仅可以使用类似 NekoRay 的客户端引导 hysteria2 client ；而 sing-box，clash-meta 等项目会将 hy2 打包进工程重新编译分发，可能暂时还不支持 hysteria2 代理出站。
 
    默认情况下会打印所有客户端配置，你可以通过可选的 `output-filter` 过滤指令仅输出 `NekoRay` / `clash-meta` / `sing-box` 的客户端出站配置：
 
@@ -66,7 +96,3 @@ Heyhy 用于快速部署 [hysteria-v2 server](https://github.com/apernet/hysteri
    ```bash
    heyhy check --neko
    ```
-
-4. **Next steps**
-
-   查看 [项目 WiKi](https://github.com/QIN2DIM/tuic-installer/wiki/Usage) 以获取完整的技术文档🐧

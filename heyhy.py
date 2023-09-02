@@ -128,13 +128,11 @@ class Project:
         return f"alias {self._alias}='{self._remote_command}'"
 
     def set_alias(self):
-        # Avoid adding `juicy` alias repeatedly
         if self.bash_aliases_path.exists():
             pre_text = self.bash_aliases_path.read_text(encoding="utf8")
             for ck in [f"\n{self.alias}\n", f"\n{self.alias}", f"{self.alias}\n", self.alias]:
                 if ck in pre_text:
                     return
-        # New `juicy` alias record
         with open(self.bash_aliases_path, "a", encoding="utf8") as file:
             file.write(f"\n{self.alias}\n")
         logging.info(f"✅ 现在你可以通过别名唤起脚本 - alias={self._alias}")
@@ -696,7 +694,7 @@ class Scaffold:
 
 
 def run():
-    parser = argparse.ArgumentParser(description="Hysteria-v2 Scaffold (Python3.8+)")
+    parser = argparse.ArgumentParser(description="Hysteria-v2 Scaffold (Python3.7+)")
     subparsers = parser.add_subparsers(dest="command")
 
     install_parser = subparsers.add_parser("install", help="Automatically install and run")
@@ -707,17 +705,17 @@ def run():
 
     check_parser = subparsers.add_parser("check", help="Print client configuration")
 
-    subparsers.add_parser("status", help="Check tuic-service status")
-    subparsers.add_parser("log", help="Check tuic-service syslog")
-    subparsers.add_parser("start", help="Start tuic-service")
-    subparsers.add_parser("stop", help="Stop tuic-service")
-    subparsers.add_parser("restart", help="restart tuic-service")
+    subparsers.add_parser("status", help="Check hysteria2 service status")
+    subparsers.add_parser("log", help="Check hysteria2 service syslog")
+    subparsers.add_parser("start", help="Start hysteria2 service")
+    subparsers.add_parser("stop", help="Stop hysteria2 service")
+    subparsers.add_parser("restart", help="restart hysteria2 service")
 
     for c in [check_parser, install_parser]:
         c.add_argument("--nekoray", action="store_true", help="show NekoRay config")
-        c.add_argument("--clash", action="store_true", help="show Clash.Meta config")
-        c.add_argument("--v2ray", action="store_true", help="show v2rayN config")
-        c.add_argument("--singbox", action="store_true", help="show sing-box config")
+        # c.add_argument("--clash", action="store_true", help="show Clash.Meta config")
+        # c.add_argument("--v2ray", action="store_true", help="show v2rayN config")
+        # c.add_argument("--singbox", action="store_true", help="show sing-box config")
 
     args = parser.parse_args()
     command = args.command

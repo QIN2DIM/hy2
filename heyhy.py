@@ -548,7 +548,13 @@ class Scaffold:
             domain = input("> 解析到本机的域名：")
 
         try:
-            server_ip = socket.getaddrinfo(domain, None)[-1][4][0]
+            server_ipv4 = ""
+            addrs = socket.getaddrinfo(domain, None)
+            for info in addrs:
+                ip = info[4][0]
+                if ":" not in ip:
+                    server_ipv4 = ip
+            server_ip = server_ipv4
         except socket.gaierror:
             logging.error(f"域名不可达或拼写错误的域名 - domain={domain}")
         else:

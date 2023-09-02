@@ -35,7 +35,7 @@ Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria)
 
 3. **查看所有指令**
 
-   查看 [项目 WiKi](https://github.com/QIN2DIM/hy2/wiki/Usage) 以获取完整的技术文档🐧
+   查看 [项目 WiKi](https://github.com/QIN2DIM/hy2/wiki/Usage) 以获取完整的技术文档🐧 如果你还没用过 NekoRay，可以看[这篇wiki](https://github.com/QIN2DIM/hy2/wiki/NekoRay---hysteria2) 一分钟上手。
 
    ```bash
    $heyhy -h

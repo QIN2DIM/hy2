@@ -21,7 +21,7 @@ import time
 from contextlib import suppress
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Literal, NoReturn, Union, Tuple
+from typing import Dict, Literal, NoReturn, Union, Tuple, Any
 from urllib import request
 from urllib.request import urlretrieve
 from uuid import uuid4
@@ -67,6 +67,7 @@ class Project:
     server_config_path = workstation_dir.joinpath("server.json")
 
     nekoray_config_path = workstation_dir.joinpath("nekoray_config.json")
+    singbox_config_path = workstation_dir.joinpath("singbox_config.json")
 
     service_path = Path("/etc/systemd/system/hysteria2.service")
 
@@ -470,6 +471,46 @@ class NekoRayConfig:
         return serv_addr, serv_port
 
 
+@dataclass
+class SingBoxConfig:
+    """
+    https://sing-box.sagernet.org/zh/configuration/outbound/hysteria2/#server
+    """
+
+    server: str
+    server_port: int
+    password: str
+    tls: Dict[str, Any] = field(default_factory=dict)
+    type: str = "hysteria"
+    tag: str = "hy2-out"
+
+    @classmethod
+    def from_server(cls, user: User, server_addr: str, server_port: int, server_ip: str):
+        return cls(
+            server=server_ip,
+            server_port=server_port,
+            password=user.password,
+            tls={
+                "enabled": True,
+                "disable_sni": False,
+                "server_name": server_addr,
+                "insecure": False,
+            },
+        )
+
+    @classmethod
+    def from_json(cls, sp: Path):
+        data = json.loads(sp.read_text(encoding="utf8"))
+        return from_dict_to_cls(cls, data)
+
+    def to_json(self, sp: Path):
+        sp.write_text(json.dumps(self.__dict__, indent=4, ensure_ascii=True))
+
+    @property
+    def showcase(self) -> str:
+        return json.dumps(self.__dict__, indent=4, ensure_ascii=True)
+
+
 # =================================== DataModel ===================================
 
 
@@ -487,6 +528,11 @@ TEMPLATE_PRINT_NEKORAY = """
 TEMPLATE_PRINT_SHARELINK = """
 \033[36m--> Hysteria2 通用订阅\033[0m
 \033[34m{sharelink}\033[0m
+"""
+
+TEMPLATE_PRINT_SINGBOX = """
+\033[36m--> sing-box hysteria2 客户端出站配置\033[0m
+{singbox_config}
 """
 
 
@@ -509,6 +555,11 @@ class Template:
         )
         nekoray.to_json(project.nekoray_config_path)
 
+        # 生成 sing-box 客户端出站配置
+        # https://sing-box.sagernet.org/configuration/outbound/tuic/
+        singbox = SingBoxConfig.from_server(user, server_addr, server_port, server_ip)
+        singbox.to_json(project.singbox_config_path)
+
     def print_nekoray(self):
         if not self.project.nekoray_config_path.exists():
             logging.error(f"❌ 客户端配置文件不存在 - path={self.project.nekoray_config_path}")
@@ -522,16 +573,24 @@ class Template:
                 )
             )
 
+    def print_singbox(self):
+        if not self.project.singbox_config_path.exists():
+            logging.error(f"❌ 客户端配置文件不存在 - path={self.project.singbox_config_path}")
+        else:
+            singbox = SingBoxConfig.from_json(self.project.singbox_config_path)
+            print(TEMPLATE_PRINT_SINGBOX.format(singbox_config=singbox.showcase))
+
     def parse(self, params: argparse):
-        show_all = not any([params.nekoray])
+        show_all = not any([params.nekoray, params.singbox])
         if show_all:
             self.print_nekoray()
+            self.print_singbox()
         elif params.nekoray:
             self.print_nekoray()
         elif params.clash:
             logging.warning("Unimplemented feature")
         elif params.singbox:
-            logging.warning("Unimplemented feature")
+            self.print_singbox()
         elif params.v2ray:
             logging.warning("Unimplemented feature")
 
@@ -721,7 +780,7 @@ def run():
         c.add_argument("--nekoray", action="store_true", help="show NekoRay config")
         # c.add_argument("--clash", action="store_true", help="show Clash.Meta config")
         # c.add_argument("--v2ray", action="store_true", help="show v2rayN config")
-        # c.add_argument("--singbox", action="store_true", help="show sing-box config")
+        c.add_argument("--singbox", action="store_true", help="show sing-box config")
 
     args = parser.parse_args()
     command = args.command

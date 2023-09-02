@@ -71,6 +71,8 @@ class Project:
 
     service_path = Path("/etc/systemd/system/hysteria2.service")
 
+    cert_path_log = workstation_dir.joinpath("cert_path_log.json")
+
     # 设置别名
     root_dir = Path(os.path.expanduser("~"))
     bash_aliases_path = root_dir.joinpath(".bashrc")
@@ -161,18 +163,36 @@ class Project:
             working_directory=f"{self.workstation_dir}",
         )
 
+    def log_cert(self, cert: Certificate):
+        msg = {"fullchain": cert.fullchain, "privkey": cert.privkey}
+        self.cert_path_log.write_text(json.dumps(msg))
+
 
 @dataclass
 class Certificate:
     domain: str
+    _fullchain = ""
+    _privkey = ""
+
+    def __post_init__(self):
+        self._fullchain = f"/etc/letsencrypt/live/{self.domain}/fullchain.pem"
+        self._privkey = f"/etc/letsencrypt/live/{self.domain}/privkey.pem"
 
     @property
     def fullchain(self):
-        return f"/etc/letsencrypt/live/{self.domain}/fullchain.pem"
+        return self._fullchain
+
+    @fullchain.setter
+    def fullchain(self, cert_path: Path):
+        self._fullchain = str(cert_path)
 
     @property
     def privkey(self):
-        return f"/etc/letsencrypt/live/{self.domain}/privkey.pem"
+        return self._privkey
+
+    @privkey.setter
+    def privkey(self, key_path: Path):
+        self._privkey = str(key_path)
 
 
 class CertBot:
@@ -190,9 +210,9 @@ class CertBot:
             for k in os.listdir(p):
                 k_full = p.joinpath(k)
                 if (
-                    not p.joinpath(self._domain).exists()
-                    and k.startswith(f"{self._domain}-")
-                    and k_full.is_dir()
+                        not p.joinpath(self._domain).exists()
+                        and k.startswith(f"{self._domain}-")
+                        and k_full.is_dir()
                 ):
                     shutil.rmtree(k_full, ignore_errors=True)
 
@@ -435,12 +455,12 @@ class NekoRayConfig:
 
     @classmethod
     def from_server(
-        cls,
-        user: User,
-        server_config: ServerConfig,
-        server_addr: str,
-        server_port: int,
-        server_ip: str,
+            cls,
+            user: User,
+            server_config: ServerConfig,
+            server_addr: str,
+            server_port: int,
+            server_ip: str,
     ):
         auth = user.password
         tls = {"sni": server_addr, "insecure": False}
@@ -597,6 +617,43 @@ class Template:
 
 class Scaffold:
     @staticmethod
+    def _handle_cert(domain: str, params: argparse.Namespace) -> Certificate | NoReturn:
+        cert = Certificate(domain)
+
+        if any([params.cert, params.key]) and not all([params.cert, params.key]):
+            logging.error("參數 `--cert` 与 `--key` 需要一起使用")
+            sys.exit()
+
+        # 当指定 fullchain 时，认为宿主机已安装证书并存到参数指向的绝对路径
+        # 而不是自定义一个路径用于修改 certbot 默认的着陆点
+        if all([params.cert, params.key]):
+            fullchain_path = Path(params.cert)
+            privkey_path = Path(params.key)
+            # 期望用户给出 *.pem 格式的证书，无法使用 cryptography 做前置验证
+            # 错误的证书链接不影响脚本运行，但最终 hy2 服务端必然启动失败
+            for p in [fullchain_path, privkey_path]:
+                if not p.is_absolute():
+                    logging.error(f"配置证书时必须使用绝对路径 - path={p}")
+                    sys.exit()
+                if not p.is_file():
+                    logging.error(f"应指向证书文件而非文件夹 - path={p}")
+                    sys.exit()
+                if not p.exists():
+                    logging.error(f"拼写错误或指定的证书文件不存在 - path={p}")
+                    sys.exit()
+
+            cert.fullchain = fullchain_path
+            cert.privkey = privkey_path
+
+        # 调用 certbot 安装证书或跳过已存在的步骤
+        if not Path(cert.fullchain).exists():
+            CertBot(domain).run()
+        else:
+            logging.info(f"证书文件已存在 - path={Path(cert.fullchain).parent}")
+
+        return cert
+
+    @staticmethod
     def _validate_domain(domain: str | None) -> Union[NoReturn, Tuple[str, str]]:
         """
 
@@ -658,13 +715,7 @@ class Scaffold:
         logging.info(f"域名解析成功 - domain={domain}")
 
         # 初始化证书对象
-        cert = Certificate(domain)
-
-        # 为绑定到本机的域名申请证书
-        if not Path(cert.fullchain).exists():
-            CertBot(domain).run()
-        else:
-            logging.info(f"证书文件已存在 - path={Path(cert.fullchain).parent}")
+        cert = Scaffold._handle_cert(domain, params)
 
         # 初始化 workstation
         project = Project()
@@ -672,6 +723,7 @@ class Scaffold:
 
         # 设置脚本别名
         project.set_alias()
+        project.log_cert(cert)
 
         # 初始化系统服务配置
         project.server_ip = server_ip
@@ -737,15 +789,19 @@ class Scaffold:
         service = Service.build_from_template(path=project.service_path)
 
         if cmd == "status":
-            active = Scaffold._recv_stream(f"systemctl is-active {service.name}")
-            logging.info(f"hysteria2 服务状态：{active}")
-            version = Scaffold._recv_stream(f"{project.executable_path} -v")
-            logging.info(f"hysteria2 服务版本：{version}")
+            os.system("clear")
             ct_active = Scaffold._recv_stream("systemctl is-active certbot.timer")
             logging.info(f"证书续订服务状态：{ct_active}")
+            if project.cert_path_log.exists():
+                cert_log = json.loads(project.cert_path_log.read_text(encoding="utf8"))
+                for alt, fp in cert_log.items():
+                    logging.info(f"{alt}: {fp}")
             logging.info(f"服務端配置：{project.server_config_path}")
             logging.info(f"客戶端配置[NekoRay]：{project.nekoray_config_path}")
+            logging.info(f"客戶端配置[sing-box]：{project.singbox_config_path}")
             logging.info(f"hysteria2 系统服务配置：{project.service_path}")
+            os.system(f"{Project.executable_path} version")
+            os.system(f"systemctl status {Service.name}")
         elif cmd == "log":
             # FIXME unknown syslog
             syslog = Scaffold._recv_stream(f"journalctl -u {service.name} -f -o cat")
@@ -764,6 +820,8 @@ def run():
 
     install_parser = subparsers.add_parser("install", help="Automatically install and run")
     install_parser.add_argument("-d", "--domain", type=str, help="传参指定域名，否则需要在运行脚本后以交互的形式输入")
+    install_parser.add_argument("--cert", type=str, help="/path/to/fullchain.pem")
+    install_parser.add_argument("--key", type=str, help="/path/to/privkey.pem")
 
     remove_parser = subparsers.add_parser("remove", help="Uninstall services and associated caches")
     remove_parser.add_argument("-d", "--domain", type=str, help="传参指定域名，否则需要在运行脚本后以交互的形式输入")

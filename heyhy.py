@@ -37,7 +37,7 @@ if getpass.getuser() != "root":
     logging.error(" Opps~ 你需要手动切换到 root 用户运行该脚本")
     sys.exit()
 
-URL = "https://github.com/apernet/hysteria/releases/download/app%2Fv2.0.0/hysteria-linux-amd64-avx"
+URL = "https://github.com/apernet/hysteria/releases/download/app%2Fv2.0.0/hysteria-linux-amd64"
 executable_name = URL.split("/")[-1]
 
 TEMPLATE_SERVICE = """
@@ -479,7 +479,7 @@ TEMPLATE_PRINT_NEKORAY = """
 # 地址：{server_addr}
 # 端口：{listen_port}
 # 命令：-c %config%
-# 核心：hysteria2  // 需下载 avx 版本
+# 核心：hysteria2
 
 {nekoray_config}
 """

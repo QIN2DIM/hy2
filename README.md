@@ -32,10 +32,13 @@ Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria)
    ```shell
    python3 <(curl -fsSL https://ros.services/heyhy.py) remove -d YOUR_DOMAIN
    ```
+3. **客户端配置**
 
-3. **查看所有指令**
+    查看[这篇wiki](https://github.com/QIN2DIM/hy2/wiki/NekoRay---hysteria2)，以 NekoRay 为例配置 hysteria2。
 
-   查看 [项目 WiKi](https://github.com/QIN2DIM/hy2/wiki/Usage) 以获取完整的技术文档🐧 如果你还没用过 NekoRay，可以看[这篇wiki](https://github.com/QIN2DIM/hy2/wiki/NekoRay---hysteria2) 一分钟上手。
+4. **查看所有指令**
+
+   查看 [项目 WiKi](https://github.com/QIN2DIM/hy2/wiki/Usage) 以获取完整的技术文档🐧 
 
    ```bash
    $heyhy -h
@@ -59,7 +62,7 @@ Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria)
      -h, --help            show this help message and exit
    ```
 
-4. **常用操作**
+5. **常用操作**
 
    > 🚧 2023/09/02 以下为预发行内容
    >

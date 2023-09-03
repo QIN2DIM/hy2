@@ -480,7 +480,7 @@ class NekoRayConfig:
 
     @property
     def sharelink(self) -> str:
-        # FIXME must use domain
+        """https://hysteria.network/zh/docs/developers/URI-Scheme/"""
         sl = f"hysteria2://{self.auth}@{self.server}?sni={self.tls['sni']}"
         return sl
 
@@ -801,6 +801,8 @@ class Scaffold:
 
         if cmd == "status":
             os.system("clear")
+            os.system(f"{Project.executable_path} version")
+            os.system(f"systemctl status {Service.name} --lines=0")
             ct_active = Scaffold._recv_stream("systemctl is-active certbot.timer")
             logging.info(f"证书续订服务状态：{ct_active}")
             if project.cert_path_log.exists():
@@ -810,13 +812,11 @@ class Scaffold:
             logging.info(f"服務端配置：{project.server_config_path}")
             logging.info(f"客戶端配置[NekoRay]：{project.nekoray_config_path}")
             logging.info(f"客戶端配置[sing-box]：{project.singbox_config_path}")
-            logging.info(f"hysteria2 系统服务配置：{project.service_path}")
-            os.system(f"{Project.executable_path} version")
-            os.system(f"systemctl status {Service.name}")
+            logging.info(f"系统服务配置：{project.service_path}")
         elif cmd == "log":
-            # FIXME unknown syslog
-            syslog = Scaffold._recv_stream(f"journalctl -u {service.name} -f -o cat")
-            print(syslog)
+            os.system("clear")
+            os.system(f"{Project.executable_path} version")
+            os.system(f"journalctl -f -o cat -u {service.name}")
         elif cmd == "start":
             service.start()
         elif cmd == "stop":

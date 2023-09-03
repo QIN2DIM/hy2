@@ -12,7 +12,7 @@ Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria)
 
 > 首次安装完毕后，你可以通过别名指令 `heyhy` 调度脚本。
 
-1. **一键部署**
+1. **服务部署**
 
    在交互式引导下完成部署。脚本会在任务结束后打印代理客户端配置。
    ```shell
@@ -34,7 +34,7 @@ Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria)
    ```
 3. **客户端配置**
 
-    查看[这篇wiki](https://github.com/QIN2DIM/hy2/wiki/NekoRay---hysteria2)，以 NekoRay 为例配置 hysteria2。
+    查看[这篇博客](https://blog.echosec.top/p/hysteria2-tutorial/) ，以 NekoRay 和 sing-box 为例介绍 hysteria2 客户端食用方法。
 
 4. **查看所有指令**
 

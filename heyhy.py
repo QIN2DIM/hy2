@@ -814,12 +814,8 @@ class Scaffold:
             logging.info(f"客戶端配置[NekoRay]：{project.nekoray_config_path}")
             logging.info(f"客戶端配置[sing-box]：{project.singbox_config_path}")
             logging.info(f"系统服务配置：{project.service_path}")
-            # --- system service ---
-            os.system(f"systemctl status {Service.name}")
-
         elif cmd == "log":
-            syslog = Scaffold._recv_stream(f"journalctl -u {service.name} -f -o cat")
-            print(syslog)
+            os.system(f"systemctl status {Service.name}")
         elif cmd == "start":
             service.start()
         elif cmd == "stop":

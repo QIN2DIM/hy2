@@ -382,7 +382,7 @@ class User:
 
     @classmethod
     def gen(cls):
-        return cls(username=str(uuid4()), password=secrets.token_hex()[:16])
+        return cls(username=str(uuid4()), password=secrets.token_hex())
 
 
 @dataclass

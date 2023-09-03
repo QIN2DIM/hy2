@@ -816,6 +816,7 @@ class Scaffold:
             logging.info(f"系统服务配置：{project.service_path}")
         elif cmd == "log":
             os.system(f"systemctl status {Service.name}")
+            os.system(f"journalctl -f -o cat -u {service.name}")
         elif cmd == "start":
             service.start()
         elif cmd == "stop":

@@ -670,20 +670,25 @@ class Scaffold:
             domain = input("> 解析到本机的域名：")
 
         server_ipv4, my_ip = "", ""
+
+        # 查詢傳入的域名鏈接的端點 IPv4
         try:
             server_ipv4 = socket.gethostbyname(domain)
         except socket.gaierror:
             logging.error(f"域名不可达或拼写错误的域名 - domain={domain}")
 
+        # 查詢本機訪問公網的 IPv4
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.connect(("8.8.8.8", 80))
             my_ip = s.getsockname()[0]
         except Exception as err:
-            print(err)
+            logging.error(err)
 
+        # 判斷傳入的域名是否链接到本机
         if my_ip == server_ipv4:
             return domain, server_ipv4
+
         logging.error(
             f"你的主机外网IP与域名解析到的IP不一致 - my_ip={my_ip} domain={domain} server_ip={server_ipv4}"
         )

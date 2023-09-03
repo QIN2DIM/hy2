@@ -803,8 +803,7 @@ class Scaffold:
             os.system("clear")
             # --- Hysteria2 ---
             os.system(f"{Project.executable_path} version")
-            os.system(f"systemctl status {Service.name}")
-            # --- Heyhy ---
+            # --- Scaffold ---
             ct_active = Scaffold._recv_stream("systemctl is-active certbot.timer")
             logging.info(f"证书续订服务状态：{ct_active}")
             if project.cert_path_log.exists():
@@ -815,6 +814,9 @@ class Scaffold:
             logging.info(f"客戶端配置[NekoRay]：{project.nekoray_config_path}")
             logging.info(f"客戶端配置[sing-box]：{project.singbox_config_path}")
             logging.info(f"系统服务配置：{project.service_path}")
+            # --- system service ---
+            os.system(f"systemctl status {Service.name}")
+
         elif cmd == "log":
             syslog = Scaffold._recv_stream(f"journalctl -u {service.name} -f -o cat")
             print(syslog)

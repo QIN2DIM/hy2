@@ -803,7 +803,6 @@ class Scaffold:
             os.system("clear")
             # --- Hysteria2 ---
             os.system(f"{Project.executable_path} version")
-            print("1")
             # --- Scaffold ---
             ct_active = Scaffold._recv_stream("systemctl is-active certbot.timer")
             logging.info(f"证书续订服务状态：{ct_active}")
@@ -815,6 +814,7 @@ class Scaffold:
             logging.info(f"客戶端配置[NekoRay]：{project.nekoray_config_path}")
             logging.info(f"客戶端配置[sing-box]：{project.singbox_config_path}")
             logging.info(f"系统服务配置：{project.service_path}")
+            print("",flush=True)
             # --- system service ---
             os.system(f"systemctl status {Service.name}")
 

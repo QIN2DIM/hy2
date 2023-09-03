@@ -500,7 +500,7 @@ class SingBoxConfig:
     server_port: int
     password: str
     tls: Dict[str, Any] = field(default_factory=dict)
-    type: str = "hysteria"
+    type: str = "hysteria2"
     tag: str = "hy2-out"
 
     @classmethod

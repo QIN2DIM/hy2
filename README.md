@@ -34,11 +34,11 @@ Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria)
    ```
 3. **客户端配置**
 
-    查看[这篇博客](https://blog.echosec.top/p/hysteria2-tutorial/) ，以 NekoRay 和 sing-box 为例介绍 hysteria2 客户端食用方法。
+    查看 [这篇博客](https://blog.echosec.top/p/hysteria2-tutorial/) ，以 NekoRay 和 sing-box 为例介绍 hysteria2 客户端食用方法。
 
 4. **查看所有指令**
 
-   查看 [项目 WiKi](https://github.com/QIN2DIM/hy2/wiki/Usage) 以获取完整的技术文档🐧 
+   查看 [项目 WiKi](https://github.com/QIN2DIM/hy2/wiki/Usage) 获取完整的技术文档🐧 
 
    ```bash
    $heyhy -h

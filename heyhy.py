@@ -812,7 +812,7 @@ class Scaffold:
             logging.info(f"客戶端配置[NekoRay]：{project.nekoray_config_path}")
             logging.info(f"客戶端配置[sing-box]：{project.singbox_config_path}")
             logging.info(f"系统服务配置：{project.service_path}")
-            os.system(f"systemctl status {Service.name}")
+            os.system(f"systemctl status {Service.name} --lines=0")
         elif cmd == "log":
             os.system("clear")
             os.system(f"{Project.executable_path} version")

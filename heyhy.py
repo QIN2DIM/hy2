@@ -815,7 +815,8 @@ class Scaffold:
             logging.info(f"客戶端配置[sing-box]：{project.singbox_config_path}")
             logging.info(f"系统服务配置：{project.service_path}")
         elif cmd == "log":
-            os.system(f"systemctl status {Service.name}")
+            os.system("clear")
+            # os.system(f"systemctl status {Service.name}")
             os.system(f"journalctl -f -o cat -u {service.name}")
         elif cmd == "start":
             service.start()

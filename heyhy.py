@@ -15,7 +15,6 @@ import random
 import secrets
 import shutil
 import socket
-import ssl
 import subprocess
 import sys
 import time
@@ -23,14 +22,7 @@ from contextlib import suppress
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Literal, NoReturn, Union, Tuple, Any
-from urllib.request import (
-    urlretrieve,
-    build_opener,
-    ProxyHandler,
-    HTTPHandler,
-    install_opener,
-    urlopen,
-)
+from urllib.request import urlretrieve
 from uuid import uuid4
 
 logging.basicConfig(
@@ -677,23 +669,24 @@ class Scaffold:
         if not domain:
             domain = input("> 解析到本机的域名：")
 
+        server_ipv4, my_ip = "", ""
         try:
             server_ipv4 = socket.gethostbyname(domain)
         except socket.gaierror:
             logging.error(f"域名不可达或拼写错误的域名 - domain={domain}")
-        else:
-            opener = build_opener(ProxyHandler({"http": ""}), HTTPHandler)
-            install_opener(opener)
-            ctx = ssl.create_default_context()
-            ctx.set_ciphers("DEFAULT@SECLEVEL=1")
-            response = urlopen("https://ifconfig.me/ip", context=ctx)
-            my_ip = response.read().decode("utf-8")
-            if my_ip != server_ipv4:
-                logging.error(
-                    f"你的主机外网IP与域名解析到的IP不一致 - my_ip={my_ip} domain={domain} server_ip={server_ipv4}"
-                )
-            else:
-                return domain, server_ipv4
+
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            my_ip = s.getsockname()[0]
+        except Exception as err:
+            print(err)
+
+        if my_ip == server_ipv4:
+            return domain, server_ipv4
+        logging.error(
+            f"你的主机外网IP与域名解析到的IP不一致 - my_ip={my_ip} domain={domain} server_ip={server_ipv4}"
+        )
 
         # 域名解析错误，应当阻止用户执行安装脚本
         sys.exit()

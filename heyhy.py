@@ -15,6 +15,7 @@ import random
 import secrets
 import shutil
 import socket
+import ssl
 import subprocess
 import sys
 import time
@@ -22,8 +23,14 @@ from contextlib import suppress
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Literal, NoReturn, Union, Tuple, Any
-from urllib import request
-from urllib.request import urlretrieve
+from urllib.request import (
+    urlretrieve,
+    build_opener,
+    ProxyHandler,
+    HTTPHandler,
+    install_opener,
+    urlopen,
+)
 from uuid import uuid4
 
 logging.basicConfig(
@@ -210,9 +217,9 @@ class CertBot:
             for k in os.listdir(p):
                 k_full = p.joinpath(k)
                 if (
-                        not p.joinpath(self._domain).exists()
-                        and k.startswith(f"{self._domain}-")
-                        and k_full.is_dir()
+                    not p.joinpath(self._domain).exists()
+                    and k.startswith(f"{self._domain}-")
+                    and k_full.is_dir()
                 ):
                     shutil.rmtree(k_full, ignore_errors=True)
 
@@ -455,12 +462,12 @@ class NekoRayConfig:
 
     @classmethod
     def from_server(
-            cls,
-            user: User,
-            server_config: ServerConfig,
-            server_addr: str,
-            server_port: int,
-            server_ip: str,
+        cls,
+        user: User,
+        server_config: ServerConfig,
+        server_addr: str,
+        server_port: int,
+        server_ip: str,
     ):
         auth = user.password
         tls = {"sni": server_addr, "insecure": False}
@@ -656,7 +663,14 @@ class Scaffold:
     @staticmethod
     def _validate_domain(domain: str | None) -> Union[NoReturn, Tuple[str, str]]:
         """
-
+        # Check dualstack: socket.getaddrinfo(DOMAIN, PORT=None)
+        # Check only IPv4: socket.gethostbyname(DOMAIN)
+        addrs = socket.getaddrinfo(domain, None)
+            for info in addrs:
+                ip = info[4][0]
+                if ":" not in ip:
+                    server_ipv4 = ip
+            server_ip = server_ipv4
         :param domain:
         :return: Tuple[domain, server_ip]
         """
@@ -664,23 +678,22 @@ class Scaffold:
             domain = input("> 解析到本机的域名：")
 
         try:
-            server_ipv4 = ""
-            addrs = socket.getaddrinfo(domain, None)
-            for info in addrs:
-                ip = info[4][0]
-                if ":" not in ip:
-                    server_ipv4 = ip
-            server_ip = server_ipv4
+            server_ipv4 = socket.gethostbyname(domain)
         except socket.gaierror:
             logging.error(f"域名不可达或拼写错误的域名 - domain={domain}")
         else:
-            my_ip = request.urlopen("http://ifconfig.me/ip").read().decode("utf8")
-            if my_ip != server_ip:
+            opener = build_opener(ProxyHandler({"http": ""}), HTTPHandler)
+            install_opener(opener)
+            ctx = ssl.create_default_context()
+            ctx.set_ciphers("DEFAULT@SECLEVEL=1")
+            response = urlopen("https://ifconfig.me/ip", context=ctx)
+            my_ip = response.read().decode("utf-8")
+            if my_ip != server_ipv4:
                 logging.error(
-                    f"你的主机外网IP与域名解析到的IP不一致 - my_ip={my_ip} domain={domain} server_ip={server_ip}"
+                    f"你的主机外网IP与域名解析到的IP不一致 - my_ip={my_ip} domain={domain} server_ip={server_ipv4}"
                 )
             else:
-                return domain, server_ip
+                return domain, server_ipv4
 
         # 域名解析错误，应当阻止用户执行安装脚本
         sys.exit()

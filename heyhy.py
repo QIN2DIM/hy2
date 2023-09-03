@@ -22,7 +22,6 @@ from contextlib import suppress
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Literal, NoReturn, Union, Tuple, Any
-from urllib import request
 from urllib.request import urlretrieve
 from uuid import uuid4
 
@@ -210,9 +209,9 @@ class CertBot:
             for k in os.listdir(p):
                 k_full = p.joinpath(k)
                 if (
-                        not p.joinpath(self._domain).exists()
-                        and k.startswith(f"{self._domain}-")
-                        and k_full.is_dir()
+                    not p.joinpath(self._domain).exists()
+                    and k.startswith(f"{self._domain}-")
+                    and k_full.is_dir()
                 ):
                     shutil.rmtree(k_full, ignore_errors=True)
 
@@ -455,12 +454,12 @@ class NekoRayConfig:
 
     @classmethod
     def from_server(
-            cls,
-            user: User,
-            server_config: ServerConfig,
-            server_addr: str,
-            server_port: int,
-            server_ip: str,
+        cls,
+        user: User,
+        server_config: ServerConfig,
+        server_addr: str,
+        server_port: int,
+        server_ip: str,
     ):
         auth = user.password
         tls = {"sni": server_addr, "insecure": False}
@@ -656,31 +655,43 @@ class Scaffold:
     @staticmethod
     def _validate_domain(domain: str | None) -> Union[NoReturn, Tuple[str, str]]:
         """
-
+        # Check dualstack: socket.getaddrinfo(DOMAIN, PORT=None)
+        # Check only IPv4: socket.gethostbyname(DOMAIN)
+        addrs = socket.getaddrinfo(domain, None)
+            for info in addrs:
+                ip = info[4][0]
+                if ":" not in ip:
+                    server_ipv4 = ip
+            server_ip = server_ipv4
         :param domain:
         :return: Tuple[domain, server_ip]
         """
         if not domain:
             domain = input("> 解析到本机的域名：")
 
+        server_ipv4, my_ip = "", ""
+
+        # 查詢傳入的域名鏈接的端點 IPv4
         try:
-            server_ipv4 = ""
-            addrs = socket.getaddrinfo(domain, None)
-            for info in addrs:
-                ip = info[4][0]
-                if ":" not in ip:
-                    server_ipv4 = ip
-            server_ip = server_ipv4
+            server_ipv4 = socket.gethostbyname(domain)
         except socket.gaierror:
             logging.error(f"域名不可达或拼写错误的域名 - domain={domain}")
-        else:
-            my_ip = request.urlopen("http://ifconfig.me/ip").read().decode("utf8")
-            if my_ip != server_ip:
-                logging.error(
-                    f"你的主机外网IP与域名解析到的IP不一致 - my_ip={my_ip} domain={domain} server_ip={server_ip}"
-                )
-            else:
-                return domain, server_ip
+
+        # 查詢本機訪問公網的 IPv4
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            my_ip = s.getsockname()[0]
+        except Exception as err:
+            logging.error(err)
+
+        # 判斷傳入的域名是否链接到本机
+        if my_ip == server_ipv4:
+            return domain, server_ipv4
+
+        logging.error(
+            f"你的主机外网IP与域名解析到的IP不一致 - my_ip={my_ip} domain={domain} server_ip={server_ipv4}"
+        )
 
         # 域名解析错误，应当阻止用户执行安装脚本
         sys.exit()

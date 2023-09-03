@@ -803,6 +803,7 @@ class Scaffold:
             os.system("clear")
             # --- Hysteria2 ---
             os.system(f"{Project.executable_path} version")
+            print("1")
             # --- Scaffold ---
             ct_active = Scaffold._recv_stream("systemctl is-active certbot.timer")
             logging.info(f"证书续订服务状态：{ct_active}")

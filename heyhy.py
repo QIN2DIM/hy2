@@ -600,7 +600,7 @@ class Template:
             print(TEMPLATE_PRINT_SINGBOX.format(singbox_config=singbox.showcase))
 
     def parse(self, params: argparse):
-        show_all = not any([params.nekoray, params.singbox])
+        show_all = not any([params.nekoray, params.singbox, params.server])
         if show_all:
             self.print_nekoray()
             self.print_singbox()

@@ -613,7 +613,7 @@ class Template:
         elif params.singbox:
             self.print_singbox()
         elif params.server:
-            os.system(f"cat {Project.server_config_path}")
+            os.system(f"more {Project.server_config_path}")
         elif params.clash:
             logging.warning("Unimplemented feature")
         elif params.v2ray:

@@ -31,7 +31,7 @@ logging.basicConfig(
 record_dir = Path("masquerade")
 
 # 用你服务器的域名替换
-hy2_domain = "hy2us1.capoo.xyz"
+hy2_domain = ""
 
 browser_args = [
     # "--enable-quic"  # enable quic 反而会伪装失败

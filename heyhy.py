@@ -412,7 +412,7 @@ class ServerConfig:
     def from_automation(cls, user: User, path_fullchain: str, path_privkey: str, server_port: int):
         tls = {"cert": path_fullchain, "key": path_privkey}
         auth = {"type": "password", "password": user.password}
-        masquerade = {"type": "proxy", "proxy": {"url": "https://dev.to/", "rewriteHost": True}}
+        masquerade = {"type": "proxy", "proxy": {"url": "https://cocodataset.org/", "rewriteHost": True}}
         quic = {
             "initStreamReceiveWindow": 8388608,
             "maxStreamReceiveWindow": 8388608,

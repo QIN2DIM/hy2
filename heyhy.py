@@ -604,12 +604,15 @@ class Template:
         if show_all:
             self.print_nekoray()
             self.print_singbox()
-        elif params.nekoray:
+            return
+
+        # select mode
+        os.system("clear")
+        if params.nekoray:
             self.print_nekoray()
         elif params.singbox:
             self.print_singbox()
         elif params.server:
-            os.system("clear")
             os.system(f"cat {Project.server_config_path}")
         elif params.clash:
             logging.warning("Unimplemented feature")

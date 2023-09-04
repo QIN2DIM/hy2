@@ -600,16 +600,22 @@ class Template:
             print(TEMPLATE_PRINT_SINGBOX.format(singbox_config=singbox.showcase))
 
     def parse(self, params: argparse):
-        show_all = not any([params.nekoray, params.singbox])
+        show_all = not any([params.nekoray, params.singbox, params.server])
         if show_all:
             self.print_nekoray()
             self.print_singbox()
-        elif params.nekoray:
+            return
+
+        # select mode
+        os.system("clear")
+        if params.nekoray:
             self.print_nekoray()
-        elif params.clash:
-            logging.warning("Unimplemented feature")
         elif params.singbox:
             self.print_singbox()
+        elif params.server:
+            os.system(f"more {Project.server_config_path}")
+        elif params.clash:
+            logging.warning("Unimplemented feature")
         elif params.v2ray:
             logging.warning("Unimplemented feature")
 
@@ -838,6 +844,7 @@ def run():
     remove_parser.add_argument("-d", "--domain", type=str, help="传参指定域名，否则需要在运行脚本后以交互的形式输入")
 
     check_parser = subparsers.add_parser("check", help="Print client configuration")
+    check_parser.add_argument("--server", action="store_true", help="show server config")
 
     subparsers.add_parser("status", help="Check hysteria2 service status")
     subparsers.add_parser("log", help="Check hysteria2 service syslog")

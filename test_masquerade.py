@@ -88,8 +88,8 @@ async def test_hy2_masquerade(browser: Browser):
 
 async def deepin_check(page: Page):
     if not headless:
-        logging.info("对测试站点进行任意的人为操作，维持3s")
-        await page.wait_for_timeout(3000)
+        logging.info("对测试站点进行任意的人为操作，维持30s")
+        await page.wait_for_timeout(30000)
 
 
 def bypass_system_proxy(bypass_domain: str | None = None) -> ProxySettings | None:

@@ -31,7 +31,7 @@ logging.basicConfig(
 record_dir = Path("masquerade")
 
 # 用你服务器的域名替换
-hy2_domain = ""
+hy2_domain = input(">> bind domain: ")
 
 browser_args = [
     # "--enable-quic"  # enable quic 反而会伪装失败
@@ -88,7 +88,7 @@ async def test_hy2_masquerade(browser: Browser):
 
 async def deepin_check(page: Page):
     if not headless:
-        logging.info("对测试站点进行任意的人为操作，维持30s")
+        logging.info("对测试站点进行任意的人为操作，维持3s")
         await page.wait_for_timeout(3000)
 
 

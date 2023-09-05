@@ -5,6 +5,12 @@
 # Description: 测试 hysteria2 masquerade
 """
 测试 hysteria2 masquerade 是否正常
+环境准备：
+    ```bash
+    pip install -U playwright
+    playwright install chromium
+    playwright install-deps chromium
+    ```
 如何进行：
     0. 填写测试站点 `hy2_domain`
     1. 尝试开启或关闭系统代理

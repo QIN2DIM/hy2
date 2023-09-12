@@ -22,7 +22,7 @@ from contextlib import suppress
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Literal, NoReturn, Union, Tuple, Any
-from urllib.request import urlretrieve
+from urllib.request import urlretrieve, urlopen
 from uuid import uuid4
 
 logging.basicConfig(
@@ -684,12 +684,8 @@ class Scaffold:
             logging.error(f"域名不可达或拼写错误的域名 - domain={domain}")
 
         # 查詢本機訪問公網的 IPv4
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            s.connect(("8.8.8.8", 80))
-            my_ip = s.getsockname()[0]
-        except Exception as err:
-            logging.error(err)
+        response = urlopen("https://ifconfig.me")
+        my_ip = response.read().decode('utf-8') or my_ip
 
         # 判斷傳入的域名是否链接到本机
         if my_ip == server_ipv4:

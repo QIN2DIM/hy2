@@ -844,7 +844,6 @@ def run():
     remove_parser.add_argument("-d", "--domain", type=str, help="传参指定域名，否则需要在运行脚本后以交互的形式输入")
 
     check_parser = subparsers.add_parser("check", help="Print client configuration")
-    check_parser.add_argument("--server", action="store_true", help="show server config")
 
     subparsers.add_parser("status", help="Check hysteria2 service status")
     subparsers.add_parser("log", help="Check hysteria2 service syslog")
@@ -853,6 +852,7 @@ def run():
     subparsers.add_parser("restart", help="restart hysteria2 service")
 
     for c in [check_parser, install_parser]:
+        c.add_argument("--server", action="store_true", help="show server config")
         c.add_argument("--nekoray", action="store_true", help="show NekoRay config")
         # c.add_argument("--clash", action="store_true", help="show Clash.Meta config")
         # c.add_argument("--v2ray", action="store_true", help="show v2rayN config")

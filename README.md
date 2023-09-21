@@ -2,12 +2,6 @@
 
 Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria) 并输出客户端最佳实践配置。只需 15s 即可完成全自动部署，开箱即用！
 
-## Prerequisites
-
-- Python3.8+
-- 在管理员权限下运行
-- 提前为你的服务器解析一个域名 A 纪录
-
 ## What's features
 
 | Supported Configuration         | Status |
@@ -17,6 +11,12 @@ Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria)
 | sing-box `hy2` outbound         | ✅      |
 | Clash.Meta `hysteria2` outbound | ✅      |
 | Hysteria2 client                | 🚧      |
+
+## Prerequisites
+
+- Python3.8+
+- 在管理员权限下运行
+- 提前为你的服务器解析一个域名 A 纪录
 
 ## Get started
 

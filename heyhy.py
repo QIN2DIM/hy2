@@ -711,6 +711,7 @@ class Template:
         if show_all:
             self.print_nekoray()
             self.print_singbox()
+            self.print_clash_meta()
             return
 
         # select mode

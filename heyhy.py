@@ -58,6 +58,47 @@ WorkingDirectory={working_directory}
 WantedBy=multi-user.target
 """
 
+# https://adguard-dns.io/kb/zh-CN/general/dns-providers
+# https://github.com/MetaCubeX/Clash.Meta/blob/53f9e1ee7104473da2b4ff5da29965563084482d/config/config.go#L891
+TEMPLATE_META_CONFIG = """
+dns:
+  enable: true
+  prefer-h3: true
+  enhanced-mode: fake-ip
+  nameserver:
+    - "https://dns.google/dns-query#PROXY"
+    - "https://security.cloudflare-dns.com/dns-query#PROXY"
+    - "quic://dns.adguard-dns.com"
+  proxy-server-nameserver:
+    - "https://223.5.5.5/dns-query"
+  nameserver-policy:
+    "geosite:cn":
+      - "https://223.5.5.5/dns-query#h3=true"
+rules:
+  - GEOSITE,category-scholar-!cn,PROXY
+  - GEOSITE,category-ads-all,REJECT
+  - GEOSITE,youtube,PROXY
+  - GEOSITE,google,PROXY
+  - GEOSITE,cn,DIRECT
+  - GEOSITE,private,DIRECT
+  # - GEOSITE,tracker,DIRECT
+  - GEOSITE,steam@cn,DIRECT
+  - GEOSITE,category-games@cn,DIRECT
+  - GEOSITE,geolocation-!cn,PROXY
+  - GEOIP,private,DIRECT,no-resolve
+  - GEOIP,telegram,PROXY
+  - GEOIP,CN,DIRECT
+  - DST-PORT,80/8080/443/8443,PROXY
+  - MATCH,DIRECT
+"""
+
+TEMPLATE_META_PROXY_ADDONS = """
+proxies:
+  - {proxy}
+proxy-groups:
+  - {proxy_group}
+"""
+
 
 @dataclass
 class Project:
@@ -67,6 +108,7 @@ class Project:
 
     nekoray_config_path = workstation_dir.joinpath("nekoray_config.json")
     singbox_config_path = workstation_dir.joinpath("singbox_config.json")
+    clash_meta_config_path = workstation_dir.joinpath("clash_meta_config.json")
 
     service_path = Path("/etc/systemd/system/hysteria2.service")
 
@@ -412,7 +454,10 @@ class ServerConfig:
     def from_automation(cls, user: User, path_fullchain: str, path_privkey: str, server_port: int):
         tls = {"cert": path_fullchain, "key": path_privkey}
         auth = {"type": "password", "password": user.password}
-        masquerade = {"type": "proxy", "proxy": {"url": "https://cocodataset.org/", "rewriteHost": True}}
+        masquerade = {
+            "type": "proxy",
+            "proxy": {"url": "https://cocodataset.org/", "rewriteHost": True},
+        }
         quic = {
             "initStreamReceiveWindow": 8388608,
             "maxStreamReceiveWindow": 8388608,
@@ -453,14 +498,7 @@ class NekoRayConfig:
     socks5: Dict[str, str] = field(default_factory=dict)
 
     @classmethod
-    def from_server(
-        cls,
-        user: User,
-        server_config: ServerConfig,
-        server_addr: str,
-        server_port: int,
-        server_ip: str,
-    ):
+    def from_server(cls, user: User, server_addr: str, server_port: int, server_ip: str):
         auth = user.password
         tls = {"sni": server_addr, "insecure": False}
         socks5 = {"listen": "127.0.0.1:%socks_port%"}
@@ -530,6 +568,57 @@ class SingBoxConfig:
         return json.dumps(self.__dict__, indent=4, ensure_ascii=True)
 
 
+@dataclass
+class ClashMetaConfig:
+    # 在 meta_config.yaml 中的配置内容
+    contents: str
+
+    @classmethod
+    def from_server(cls, user: User, server_addr: str, server_port: int, server_ip: str):
+        def from_string_to_yaml(s: str):
+            _suffix = ", "
+            fs = _suffix.join([i.strip() for i in s.split("\n") if i])
+            fs = fs[: len(fs) - len(_suffix)]
+            return "{ " + fs + " }"
+
+        def remove_empty_lines(s: str):
+            lines = s.split("\n")
+            non_empty_lines = [line for line in lines if line.strip()]
+            return "\n".join(non_empty_lines)
+
+        name = "hysteria2"
+
+        # https://github.com/MetaCubeX/Clash.Meta/blob/f6bf9c08577060bb199c2f746c7d91dd3c0ca7b9/adapter/outbound/hysteria2.go#L41
+        proxy = f"""
+        name: "{name}"
+        type: hysteria2
+        server: {server_ip}
+        port: {server_port}
+        password: {user.password}
+        sni: {server_addr}
+        skip-cert-verify: false
+        """
+
+        # https://wiki.metacubex.one/config/proxy-groups/select/
+        proxy_group = f"""
+        name: PROXY
+        type: select
+        proxies: ["{name}"]
+        """
+
+        proxy = from_string_to_yaml(proxy)
+        proxy_group = from_string_to_yaml(proxy_group)
+
+        addons = TEMPLATE_META_PROXY_ADDONS.format(proxy=proxy, proxy_group=proxy_group)
+        contents = TEMPLATE_META_CONFIG + addons
+        contents = remove_empty_lines(contents)
+
+        return cls(contents=contents)
+
+    def to_yaml(self, sp: Path):
+        sp.write_text(self.contents + "\n")
+
+
 # =================================== DataModel ===================================
 
 
@@ -547,6 +636,11 @@ TEMPLATE_PRINT_NEKORAY = """
 TEMPLATE_PRINT_SHARELINK = """
 \033[36m--> Hysteria2 通用订阅\033[0m
 \033[34m{sharelink}\033[0m
+"""
+
+TEMPLATE_PRINT_META = """
+\033[36m--> Clash.Meta 配置文件输出路径\033[0m
+{meta_path}
 """
 
 TEMPLATE_PRINT_SINGBOX = """
@@ -569,15 +663,18 @@ class Template:
 
         # 生成 NekoRay 客户端配置实例
         # https://matsuridayo.github.io/n-extra_core/
-        nekoray = NekoRayConfig.from_server(
-            user, server_config, server_addr, server_port, server_ip
-        )
+        nekoray = NekoRayConfig.from_server(user, server_addr, server_port, server_ip)
         nekoray.to_json(project.nekoray_config_path)
 
         # 生成 sing-box 客户端出站配置
-        # https://sing-box.sagernet.org/configuration/outbound/tuic/
+        # https://sing-box.sagernet.org/configuration/outbound/hysteria2/
         singbox = SingBoxConfig.from_server(user, server_addr, server_port, server_ip)
         singbox.to_json(project.singbox_config_path)
+
+        # 生成 Clash.Meta 客户端配置
+        # https://github.com/MetaCubeX/Clash.Meta/blob/Alpha/adapter/outbound/hysteria2.go#L41
+        meta = ClashMetaConfig.from_server(user, server_addr, server_port, server_ip)
+        meta.to_yaml(project.clash_meta_config_path)
 
     def print_nekoray(self):
         if not self.project.nekoray_config_path.exists():
@@ -592,6 +689,16 @@ class Template:
                 )
             )
 
+    def print_clash_meta(self):
+        if not self.project.clash_meta_config_path.exists():
+            logging.error(f"❌ 客户端配置文件不存在 - path={self.project.clash_meta_config_path}")
+        elif self.mode == "install":
+            print(TEMPLATE_PRINT_META.format(meta_path=self.project.clash_meta_config_path))
+        elif self.mode == "check":
+            print(TEMPLATE_PRINT_META.format(meta_path=self.project.clash_meta_config_path))
+            print("\033[36m--> Clash.Meta 配置信息\033[0m")
+            print(self.project.clash_meta_config_path.read_text())
+
     def print_singbox(self):
         if not self.project.singbox_config_path.exists():
             logging.error(f"❌ 客户端配置文件不存在 - path={self.project.singbox_config_path}")
@@ -600,7 +707,7 @@ class Template:
             print(TEMPLATE_PRINT_SINGBOX.format(singbox_config=singbox.showcase))
 
     def parse(self, params: argparse):
-        show_all = not any([params.nekoray, params.singbox, params.server])
+        show_all = not any([params.nekoray, params.singbox, params.server, params.clash])
         if show_all:
             self.print_nekoray()
             self.print_singbox()
@@ -615,7 +722,7 @@ class Template:
         elif params.server:
             os.system(f"more {Project.server_config_path}")
         elif params.clash:
-            logging.warning("Unimplemented feature")
+            self.print_clash_meta()
         elif params.v2ray:
             logging.warning("Unimplemented feature")
 
@@ -685,7 +792,7 @@ class Scaffold:
 
         # 查詢本機訪問公網的 IPv4
         response = urlopen("https://ifconfig.me")
-        my_ip = response.read().decode('utf-8') or my_ip
+        my_ip = response.read().decode("utf-8") or my_ip
 
         # 判斷傳入的域名是否链接到本机
         if my_ip == server_ipv4:
@@ -850,7 +957,7 @@ def run():
     for c in [check_parser, install_parser]:
         c.add_argument("--server", action="store_true", help="show server config")
         c.add_argument("--nekoray", action="store_true", help="show NekoRay config")
-        # c.add_argument("--clash", action="store_true", help="show Clash.Meta config")
+        c.add_argument("--clash", action="store_true", help="show Clash.Meta config")
         # c.add_argument("--v2ray", action="store_true", help="show v2rayN config")
         c.add_argument("--singbox", action="store_true", help="show sing-box config")
 

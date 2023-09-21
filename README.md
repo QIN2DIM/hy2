@@ -4,7 +4,7 @@ Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria)
 
 ## Prerequisites
 
-- Python3.7+
+- Python3.8+
 - 在管理员权限下运行
 - 提前为你的服务器解析一个域名 A 纪录
 
@@ -64,12 +64,6 @@ Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria)
 
 5. **常用操作**
 
-   > 🚧 2023/09/02 以下为预发行内容
-   >
-   > 目前，你可以通过类似 NekoRay 这样的 Wrapper GUI引导 hysteria2 client，也可以通过命令行直接启动裸核。此外，你还可以通过最新版的 sing-box 运行 hysteria2 出站代理。
-   >
-   > clash-meta 尚未支持 hysteria2 代理出站。
-
    默认情况下会打印所有客户端配置，你可以通过可选的 `output-filter` 过滤指令仅输出 `NekoRay` / `clash-meta` / `sing-box` 的客户端出站配置：
    
    | Client                                                       | Command                                                      |
@@ -77,7 +71,7 @@ Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria)
    | [NekoRay](https://matsuridayo.github.io/n-extra_core/)       | `python3 <(curl -fsSL https://ros.services/heyhy.py) install --neko` |
    | [Clash.Meta](https://wiki.metacubex.one/config/proxies/tuic/) | `python3 <(curl -fsSL https://ros.services/heyhy.py) install --clash` |
    | [sing-box](https://sing-box.sagernet.org/configuration/outbound/tuic/) | `python3 <(curl -fsSL https://ros.services/heyhy.py) install --singbox` |
-
+   
    你可以配合参数 `-d DOMAIN` 实现「一键输出」的效果，如：
    
    ```bash

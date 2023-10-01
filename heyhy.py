@@ -36,7 +36,7 @@ if getpass.getuser() != "root":
     logging.error(" Opps~ 你需要手动切换到 root 用户运行该脚本")
     sys.exit()
 
-URL = "https://github.com/apernet/hysteria/releases/download/app%2Fv2.0.2/hysteria-linux-amd64"
+URL = "https://github.com/apernet/hysteria/releases/download/app%2Fv2.0.3/hysteria-linux-amd64"
 executable_name = URL.split("/")[-1]
 
 TEMPLATE_SERVICE = """
@@ -795,8 +795,8 @@ class Scaffold:
         response = urlopen("https://ifconfig.me")
         my_ip = response.read().decode("utf-8") or my_ip
 
-        # 判斷傳入的域名是否链接到本机
-        if my_ip == server_ipv4:
+        # 判斷傳入的域名是否链接到本机 fixme
+        if my_ip == server_ipv4 or ":" in my_ip:
             return domain, server_ipv4
 
         logging.error(

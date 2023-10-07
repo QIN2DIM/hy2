@@ -36,7 +36,8 @@ if getpass.getuser() != "root":
     logging.error(" Opps~ 你需要手动切换到 root 用户运行该脚本")
     sys.exit()
 
-URL = "https://github.com/apernet/hysteria/releases/download/app%2Fv2.0.3/hysteria-linux-amd64"
+# https://github.com/apernet/hysteria/releases/download/app%2Fv2.0.4/hysteria-windows-amd64.exe
+URL = "https://github.com/apernet/hysteria/releases/download/app%2Fv2.0.4/hysteria-linux-amd64"
 executable_name = URL.split("/")[-1]
 
 TEMPLATE_SERVICE = """

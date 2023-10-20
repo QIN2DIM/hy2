@@ -854,6 +854,8 @@ class Scaffold:
         # 初始化 workstation
         project = Project()
         user = User.gen()
+        if params.password:
+            user.password = params.password
 
         # 设置脚本别名
         project.set_alias()
@@ -957,6 +959,7 @@ def run():
     install_parser.add_argument("--cert", type=str, help="/path/to/fullchain.pem")
     install_parser.add_argument("--key", type=str, help="/path/to/privkey.pem")
     install_parser.add_argument("-U", "--upgrade", type=bool, help="下载最新版预编译文件")
+    install_parser.add_argument("-p", "--password", type=str, help="password")
 
     remove_parser = subparsers.add_parser("remove", help="Uninstall services and associated caches")
     remove_parser.add_argument("-d", "--domain", type=str, help="传参指定域名，否则需要在运行脚本后以交互的形式输入")

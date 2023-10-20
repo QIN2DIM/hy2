@@ -36,9 +36,10 @@ if getpass.getuser() != "root":
     logging.error(" Opps~ 你需要手动切换到 root 用户运行该脚本")
     sys.exit()
 
-# https://github.com/apernet/hysteria/releases/download/app%2Fv2.0.4/hysteria-windows-amd64.exe
-URL = "https://github.com/apernet/hysteria/releases/download/app%2Fv2.0.4/hysteria-linux-amd64"
-executable_name = URL.split("/")[-1]
+base_prefix = "https://github.com/apernet/hysteria/releases/download"
+executable_name = "hysteria-linux-amd64"
+
+URL = f"{base_prefix}/app%2Fv2.1.1/{executable_name}"
 
 TEMPLATE_SERVICE = """
 [Unit]
@@ -99,6 +100,17 @@ proxies:
 proxy-groups:
   - {proxy_group}
 """
+
+
+def attach_latest_download_url():
+    global URL
+
+    with suppress(Exception):
+        res = urlopen("https://api.github.com/repos/apernet/hysteria/releases/latest")
+        data = json.loads(res.read().decode("utf8"))["tag_name"]
+        tag_name = data["tag_name"]
+        download_url = f"{base_prefix}/{tag_name}/{executable_name}"
+        URL = download_url
 
 
 @dataclass
@@ -944,6 +956,7 @@ def run():
     install_parser.add_argument("-d", "--domain", type=str, help="传参指定域名，否则需要在运行脚本后以交互的形式输入")
     install_parser.add_argument("--cert", type=str, help="/path/to/fullchain.pem")
     install_parser.add_argument("--key", type=str, help="/path/to/privkey.pem")
+    install_parser.add_argument("-U", "--upgrade", type=bool, help="下载最新版预编译文件")
 
     remove_parser = subparsers.add_parser("remove", help="Uninstall services and associated caches")
     remove_parser.add_argument("-d", "--domain", type=str, help="传参指定域名，否则需要在运行脚本后以交互的形式输入")
@@ -968,6 +981,8 @@ def run():
 
     with suppress(KeyboardInterrupt):
         if command == "install":
+            if args.upgrade:
+                attach_latest_download_url()
             Scaffold.install(params=args)
         elif command == "remove":
             Scaffold.remove(params=args)

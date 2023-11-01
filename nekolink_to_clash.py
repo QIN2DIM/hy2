@@ -33,11 +33,10 @@ class ProxyNode:
         code_part = urlparse(link.strip()).fragment
         metadata = json.loads(base64.b64decode(code_part).decode("utf8"))
         cs = json.loads(metadata["cs"])
-        server, port = cs["server"].split(":")
         return cls(
-            name=cs["tls"]["sni"],
-            server=server,
-            port=int(port),
+            name=metadata["name"],
+            server=metadata["addr"],
+            port=metadata["port"],
             password=cs["auth"],
             sni=cs["tls"]["sni"],
             skip_cert_verify=cs["tls"]["insecure"],

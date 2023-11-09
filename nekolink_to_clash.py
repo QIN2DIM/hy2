@@ -6,6 +6,7 @@
 import base64
 import json
 import sys
+import urllib.parse
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List
@@ -35,34 +36,61 @@ class ProxyNode:
     sni: str = field(default=str)
     skip_cert_verify: bool = field(default=bool)
 
+    down: str = "200 mbps"
+    up: str = "50 mbps"
+
     def __post_init__(self):
-        sl = f"hysteria2://{self.password}@{self.server}:{self.port}?sni={self.sni}#{self.name}"
+        sl = f"hy2://{self.password}@{self.server}:{self.port}?sni={self.sni}#{self.name}"
         print(sl)
 
     @classmethod
     def from_neko(cls, link: str):
-        code_part = urlparse(link.strip()).fragment
-        metadata = json.loads(base64.b64decode(code_part).decode("utf8"))
-        # 从自定义配置添加的节点
-        if "cs" in metadata:
-            cs = json.loads(metadata["cs"])
-            return cls(
-                name=metadata["name"],
-                server=metadata["addr"],
-                port=metadata["port"],
-                password=cs["auth"],
-                sni=cs["tls"]["sni"],
-                skip_cert_verify=cs["tls"]["insecure"],
-            )
-        # Hysteria2 标准分享格式
-        return cls(
-            name=metadata["name"],
-            server=metadata["addr"],
-            port=metadata["port"],
-            password=metadata["password"],
-            sni=metadata["sni"],
-            skip_cert_verify=metadata["allowInsecure"]
-        )
+        parse_result = urlparse(link.strip())
+
+        match parse_result.scheme:
+            case "hy2" | "hysteria2":
+                password, serv = parse_result.netloc.split("@")
+                serv_addr, serv_port = serv.split(":")
+                query = parse_result.query.split("&")
+                query_unquote = {"sni": "", }
+                for i in query:
+                    if i.startswith("sni"):
+                        query_unquote["sni"] = i.replace("sni=", "")
+                    elif i.startswith("insecure"):
+                        query_unquote["insecure"] = bool(i.replace("insecure=", ""))
+                return cls(
+                    name=urllib.parse.unquote(parse_result.fragment),
+                    server=serv_addr,
+                    port=int(serv_port),
+                    password=password,
+                    sni=query_unquote["sni"],
+                    skip_cert_verify=query_unquote.get("insecure", False)
+                )
+            case "nekoray":
+                code_part = parse_result.fragment
+                metadata = json.loads(base64.b64decode(code_part).decode("utf8"))
+                # 从自定义配置添加的节点
+                if "cs" in metadata:
+                    cs = json.loads(metadata["cs"])
+                    return cls(
+                        name=metadata["name"],
+                        server=metadata["addr"],
+                        port=metadata["port"],
+                        password=cs["auth"],
+                        sni=cs["tls"]["sni"],
+                        skip_cert_verify=cs["tls"]["insecure"],
+                    )
+                # Hysteria2 NekoLink
+                return cls(
+                    name=metadata["name"],
+                    server=metadata["addr"],
+                    port=metadata["port"],
+                    password=metadata["password"],
+                    sni=metadata["sni"],
+                    skip_cert_verify=metadata["allowInsecure"]
+                )
+            case _:
+                pass
 
     def to_dict(self):
         c = self.__dict__.copy()
@@ -83,7 +111,7 @@ class ProxyGroup:
 
 
 def parse_neko_links(neko_links: str) -> List[ProxyNode]:
-    neko_links = [i for i in neko_links.split("\n") if i.startswith("nekoray://")]
+    neko_links = [i for i in neko_links.split("\n") if i.startswith("nekoray://") or i.startswith("hy2://")]
     return [ProxyNode.from_neko(link) for link in neko_links]
 
 

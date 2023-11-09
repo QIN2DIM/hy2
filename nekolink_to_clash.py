@@ -5,6 +5,7 @@
 # Description:
 import base64
 import json
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List
@@ -12,10 +13,16 @@ from urllib.parse import urlparse
 
 import yaml
 
+links_path = Path("links.txt")
+if not links_path.exists():
+    links_path.write_text("")
+    print("--> 从 NekoRay 导出分享链接（NekoLink）到 ./links.txt 文件中")
+    sys.exit()
+
 # 从 NekoRay(v3.23) 批量导出 hysteria2 节点的 NekoLink 分享链接
 # nekoray://custom#eyJf ....
-neko_links_put = """
-"""
+# nekoray://hysteria2#eyjf ...
+neko_links_put = links_path.read_text(encoding="utf8")
 
 
 @dataclass
@@ -28,18 +35,33 @@ class ProxyNode:
     sni: str = field(default=str)
     skip_cert_verify: bool = field(default=bool)
 
+    def __post_init__(self):
+        sl = f"hysteria2://{self.password}@{self.server}:{self.port}?sni={self.sni}#{self.name}"
+        print(sl)
+
     @classmethod
     def from_neko(cls, link: str):
         code_part = urlparse(link.strip()).fragment
         metadata = json.loads(base64.b64decode(code_part).decode("utf8"))
-        cs = json.loads(metadata["cs"])
+        # 从自定义配置添加的节点
+        if "cs" in metadata:
+            cs = json.loads(metadata["cs"])
+            return cls(
+                name=metadata["name"],
+                server=metadata["addr"],
+                port=metadata["port"],
+                password=cs["auth"],
+                sni=cs["tls"]["sni"],
+                skip_cert_verify=cs["tls"]["insecure"],
+            )
+        # Hysteria2 标准分享格式
         return cls(
             name=metadata["name"],
             server=metadata["addr"],
             port=metadata["port"],
-            password=cs["auth"],
-            sni=cs["tls"]["sni"],
-            skip_cert_verify=cs["tls"]["insecure"],
+            password=metadata["password"],
+            sni=metadata["sni"],
+            skip_cert_verify=metadata["allowInsecure"]
         )
 
     def to_dict(self):
@@ -70,6 +92,7 @@ def run():
     output_path = Path("clash_verge_config.yaml")
 
     if not neko_links_put.strip():
+        print("--> 从 NekoRay 导出分享链接（NekoLink）到 ./links.txt 文件中")
         return
 
     proxies = parse_neko_links(neko_links_put)

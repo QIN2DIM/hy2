@@ -37,7 +37,7 @@ class ProxyNode:
     skip_cert_verify: bool = field(default=bool)
 
     down: str = "200 mbps"
-    up: str = "50 mbps"
+    up: str = "30 mbps"
 
     def __post_init__(self):
         sl = f"hy2://{self.password}@{self.server}:{self.port}?sni={self.sni}#{self.name}"

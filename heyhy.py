@@ -39,7 +39,7 @@ if getpass.getuser() != "root":
 base_prefix = "https://github.com/apernet/hysteria/releases/download"
 executable_name = "hysteria-linux-amd64"
 
-URL = f"{base_prefix}/app%2Fv2.2.0/{executable_name}"
+URL = f"{base_prefix}/app%2Fv2.2.3/{executable_name}"
 
 TEMPLATE_SERVICE = """
 [Unit]

@@ -694,13 +694,13 @@ class Template:
         else:
             nekoray = NekoRayConfig.from_json(self.project.nekoray_config_path)
             serv_addr, serv_port = nekoray.serv_peer
+            print(TEMPLATE_PRINT_SHARELINK.format(sharelink=nekoray.sharelink))
             if not only_show_sharelink:
                 print(
                     TEMPLATE_PRINT_NEKORAY.format(
                         server_addr=serv_addr, listen_port=serv_port, nekoray_config=nekoray.showcase
                     )
                 )
-            print(TEMPLATE_PRINT_SHARELINK.format(sharelink=nekoray.sharelink))
 
     def print_clash_meta(self):
         if not self.project.clash_meta_config_path.exists():

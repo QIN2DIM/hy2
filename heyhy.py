@@ -688,18 +688,19 @@ class Template:
         meta = ClashMetaConfig.from_server(user, server_addr, server_port, server_ip)
         meta.to_yaml(project.clash_meta_config_path)
 
-    def print_nekoray(self):
+    def print_nekoray(self, only_show_sharelink: bool = False):
         if not self.project.nekoray_config_path.exists():
             logging.error(f"❌ 客户端配置文件不存在 - path={self.project.nekoray_config_path}")
         else:
             nekoray = NekoRayConfig.from_json(self.project.nekoray_config_path)
             serv_addr, serv_port = nekoray.serv_peer
-            print(TEMPLATE_PRINT_SHARELINK.format(sharelink=nekoray.sharelink))
-            print(
-                TEMPLATE_PRINT_NEKORAY.format(
-                    server_addr=serv_addr, listen_port=serv_port, nekoray_config=nekoray.showcase
+            if not only_show_sharelink:
+                print(
+                    TEMPLATE_PRINT_NEKORAY.format(
+                        server_addr=serv_addr, listen_port=serv_port, nekoray_config=nekoray.showcase
+                    )
                 )
-            )
+            print(TEMPLATE_PRINT_SHARELINK.format(sharelink=nekoray.sharelink))
 
     def print_clash_meta(self):
         if not self.project.clash_meta_config_path.exists():
@@ -721,9 +722,9 @@ class Template:
     def parse(self, params: argparse):
         show_all = not any([params.nekoray, params.singbox, params.server, params.clash])
         if show_all:
-            self.print_nekoray()
             self.print_singbox()
             self.print_clash_meta()
+            self.print_nekoray()
             return
 
         # select mode
@@ -738,6 +739,9 @@ class Template:
             self.print_clash_meta()
         elif params.v2ray:
             logging.warning("Unimplemented feature")
+
+        # Just print sharelink
+        self.print_nekoray(only_show_sharelink=True)
 
 
 class Scaffold:

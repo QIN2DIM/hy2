@@ -722,9 +722,9 @@ class Template:
     def parse(self, params: argparse):
         show_all = not any([params.nekoray, params.singbox, params.server, params.clash])
         if show_all:
+            self.print_nekoray()
             self.print_singbox()
             self.print_clash_meta()
-            self.print_nekoray()
             return
 
         # select mode

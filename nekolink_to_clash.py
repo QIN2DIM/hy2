@@ -52,7 +52,7 @@ class ProxyNode:
                 password, serv = parse_result.netloc.split("@")
                 serv_addr, serv_port = serv.split(":")
                 query = parse_result.query.split("&")
-                query_unquote = {"sni": "", }
+                query_unquote = {"sni": ""}
                 for i in query:
                     if i.startswith("sni"):
                         query_unquote["sni"] = i.replace("sni=", "")
@@ -64,7 +64,7 @@ class ProxyNode:
                     port=int(serv_port),
                     password=password,
                     sni=query_unquote["sni"],
-                    skip_cert_verify=query_unquote.get("insecure", False)
+                    skip_cert_verify=query_unquote.get("insecure", False),
                 )
             case "nekoray":
                 code_part = parse_result.fragment
@@ -87,7 +87,7 @@ class ProxyNode:
                     port=metadata["port"],
                     password=metadata["password"],
                     sni=metadata["sni"],
-                    skip_cert_verify=metadata["allowInsecure"]
+                    skip_cert_verify=metadata["allowInsecure"],
                 )
             case _:
                 pass
@@ -111,7 +111,9 @@ class ProxyGroup:
 
 
 def parse_neko_links(neko_links: str) -> List[ProxyNode]:
-    neko_links = [i for i in neko_links.split("\n") if i.startswith("nekoray://") or i.startswith("hy2://")]
+    neko_links = [
+        i for i in neko_links.split("\n") if i.startswith("nekoray://") or i.startswith("hy2://")
+    ]
     return [ProxyNode.from_neko(link) for link in neko_links]
 
 

@@ -39,7 +39,7 @@ if getpass.getuser() != "root":
 base_prefix = "https://github.com/apernet/hysteria/releases/download"
 executable_name = "hysteria-linux-amd64"
 
-URL = f"{base_prefix}/app%2Fv2.3.0/{executable_name}"
+URL = f"{base_prefix}/app%2Fv2.4.0/{executable_name}"
 
 TEMPLATE_SERVICE = """
 [Unit]
@@ -102,7 +102,7 @@ proxy-groups:
 """
 
 
-def attach_latest_download_url():
+def fork_latest_download_url():
     global URL
 
     with suppress(Exception):
@@ -532,7 +532,7 @@ class NekoRayConfig:
     @property
     def sharelink(self) -> str:
         """https://hysteria.network/zh/docs/developers/URI-Scheme/"""
-        return f"hysteria2://{self.auth}@{self.server}?sni={self.tls['sni']}#{self.tls['sni']}"
+        return f"hy2://{self.auth}@{self.server}?sni={self.tls['sni']}#{self.tls['sni']}"
 
     @property
     def serv_peer(self) -> Tuple[str, str]:
@@ -688,18 +688,21 @@ class Template:
         meta = ClashMetaConfig.from_server(user, server_addr, server_port, server_ip)
         meta.to_yaml(project.clash_meta_config_path)
 
-    def print_nekoray(self):
+    def print_nekoray(self, only_show_sharelink: bool = False):
         if not self.project.nekoray_config_path.exists():
             logging.error(f"❌ 客户端配置文件不存在 - path={self.project.nekoray_config_path}")
         else:
             nekoray = NekoRayConfig.from_json(self.project.nekoray_config_path)
             serv_addr, serv_port = nekoray.serv_peer
             print(TEMPLATE_PRINT_SHARELINK.format(sharelink=nekoray.sharelink))
-            print(
-                TEMPLATE_PRINT_NEKORAY.format(
-                    server_addr=serv_addr, listen_port=serv_port, nekoray_config=nekoray.showcase
+            if not only_show_sharelink:
+                print(
+                    TEMPLATE_PRINT_NEKORAY.format(
+                        server_addr=serv_addr,
+                        listen_port=serv_port,
+                        nekoray_config=nekoray.showcase,
+                    )
                 )
-            )
 
     def print_clash_meta(self):
         if not self.project.clash_meta_config_path.exists():
@@ -738,6 +741,9 @@ class Template:
             self.print_clash_meta()
         elif params.v2ray:
             logging.warning("Unimplemented feature")
+
+        # Just print sharelink
+        self.print_nekoray(only_show_sharelink=True)
 
 
 class Scaffold:
@@ -948,6 +954,43 @@ class Scaffold:
         elif cmd == "restart":
             service.restart()
 
+    @staticmethod
+    def update(params: argparse.Namespace):
+        """
+        获取最新的 release tagName，下载资源，替换文件，重启服务。
+        :param params:
+        :return:
+        """
+        project = Project()
+        if not project.nekoray_config_path.is_file():
+            logging.error("客户端配置文件不存在，也许你是首次使用 heyhy，或你移动了client_config 的默认存储位置")
+            logging.info(f"默认存储路径：{project.nekoray_config_path=}")
+            return
+
+        fork_latest_download_url()
+
+        service = Service.build_from_template(
+            path=project.service_path, template=project.systemd_template
+        )
+
+        # 尝试释放 443 端口占用
+        service.stop()
+
+        logging.info(f"正在更新 hysteria2-server")
+        service.download_server(project.workstation_dir)
+
+        logging.info("正在重启系统服务")
+        service.restart()
+
+        logging.info("正在检查服务状态")
+        (response, text) = service.status()
+
+        # 在控制台输出客户端配置
+        if not response:
+            logging.info(f"服务启动失败 - status={text}")
+        else:
+            logging.info(f"服务启动成功 - status={text}")
+
 
 def run():
     parser = argparse.ArgumentParser(description="Hysteria-v2 Scaffold (Python3.7+)")
@@ -957,7 +1000,9 @@ def run():
     install_parser.add_argument("-d", "--domain", type=str, help="传参指定域名，否则需要在运行脚本后以交互的形式输入")
     install_parser.add_argument("--cert", type=str, help="/path/to/fullchain.pem")
     install_parser.add_argument("--key", type=str, help="/path/to/privkey.pem")
-    install_parser.add_argument("-U", "--upgrade", action="store_true", help="下载最新版预编译文件")
+    install_parser.add_argument(
+        "-U", "--upgrade", action="store_true", help="[DEPRECATED]下载最新版预编译文件"
+    )
     install_parser.add_argument("-p", "--password", type=str, help="password")
 
     remove_parser = subparsers.add_parser("remove", help="Uninstall services and associated caches")
@@ -970,6 +1015,8 @@ def run():
     subparsers.add_parser("start", help="Start hysteria2 service")
     subparsers.add_parser("stop", help="Stop hysteria2 service")
     subparsers.add_parser("restart", help="restart hysteria2 service")
+
+    subparsers.add_parser("update", help="保持配置不变，仅替换更新 hysteria2 server")
 
     for c in [check_parser, install_parser]:
         c.add_argument("--server", action="store_true", help="show server config")
@@ -984,7 +1031,7 @@ def run():
     with suppress(KeyboardInterrupt):
         if command == "install":
             if args.upgrade:
-                attach_latest_download_url()
+                fork_latest_download_url()
             Scaffold.install(params=args)
         elif command == "remove":
             Scaffold.remove(params=args)
@@ -992,6 +1039,8 @@ def run():
             Scaffold.check(params=args)
         elif command in ["status", "log", "start", "stop", "restart"]:
             Scaffold.service_relay(command)
+        elif command == "update":
+            Scaffold.update(params=args)
         else:
             parser.print_help()
 

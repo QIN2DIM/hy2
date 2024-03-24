@@ -161,3 +161,4 @@ cython_debug/
 masquerade/
 *.yaml
 links.txt
+tests/

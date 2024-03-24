@@ -727,6 +727,8 @@ class Template:
             self.print_nekoray()
             self.print_singbox()
             self.print_clash_meta()
+            # Just print sharelink
+            self.print_nekoray(only_show_sharelink=True)
             return
 
         # select mode
@@ -992,6 +994,7 @@ class Scaffold:
             logging.info(f"服务启动成功 - status={text}")
             time.sleep(0.5)
             Scaffold.service_relay("status")
+
 
 def run():
     parser = argparse.ArgumentParser(description="Hysteria-v2 Scaffold (Python3.7+)")

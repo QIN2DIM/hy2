@@ -990,7 +990,8 @@ class Scaffold:
             logging.info(f"服务启动失败 - status={text}")
         else:
             logging.info(f"服务启动成功 - status={text}")
-
+            time.sleep(2)
+            Scaffold.service_relay("status")
 
 def run():
     parser = argparse.ArgumentParser(description="Hysteria-v2 Scaffold (Python3.7+)")

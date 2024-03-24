@@ -990,7 +990,7 @@ class Scaffold:
             logging.info(f"服务启动失败 - status={text}")
         else:
             logging.info(f"服务启动成功 - status={text}")
-            time.sleep(2)
+            time.sleep(0.5)
             Scaffold.service_relay("status")
 
 def run():

@@ -1014,6 +1014,8 @@ def run():
     subparsers.add_parser("stop", help="Stop hysteria2 service")
     subparsers.add_parser("restart", help="restart hysteria2 service")
 
+    subparsers.add_parser("update", help="保持配置不变，仅替换更新 hysteria2 server")
+
     for c in [check_parser, install_parser]:
         c.add_argument("--server", action="store_true", help="show server config")
         c.add_argument("--nekoray", action="store_true", help="show NekoRay config")

@@ -993,6 +993,7 @@ class Scaffold:
             time.sleep(0.5)
             Scaffold.service_relay("status")
 
+
 def run():
     parser = argparse.ArgumentParser(description="Hysteria-v2 Scaffold (Python3.7+)")
     subparsers = parser.add_subparsers(dest="command")

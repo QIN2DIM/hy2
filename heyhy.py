@@ -988,6 +988,8 @@ class Scaffold:
         # 在控制台输出客户端配置
         if not response:
             logging.info(f"服务启动失败 - status={text}")
+        else:
+            logging.info(f"服务启动成功 - status={text}")
 
 
 def run():

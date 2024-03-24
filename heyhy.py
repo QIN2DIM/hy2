@@ -532,7 +532,7 @@ class NekoRayConfig:
     @property
     def sharelink(self) -> str:
         """https://hysteria.network/zh/docs/developers/URI-Scheme/"""
-        return f"hysteria2://{self.auth}@{self.server}?sni={self.tls['sni']}#{self.tls['sni']}"
+        return f"hy2://{self.auth}@{self.server}?sni={self.tls['sni']}#{self.tls['sni']}"
 
     @property
     def serv_peer(self) -> Tuple[str, str]:

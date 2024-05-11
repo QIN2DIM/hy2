@@ -107,8 +107,7 @@ def fork_latest_download_url():
 
     with suppress(Exception):
         res = urlopen("https://api.github.com/repos/apernet/hysteria/releases/latest")
-        data = json.loads(res.read().decode("utf8"))["tag_name"]
-        tag_name = data["tag_name"]
+        tag_name = json.loads(res.read().decode("utf8"))["tag_name"]
         download_url = f"{base_prefix}/{tag_name}/{executable_name}"
         URL = download_url
 

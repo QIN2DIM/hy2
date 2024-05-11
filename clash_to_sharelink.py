@@ -60,7 +60,7 @@ def run(yaml_path: Path):
             continue
         sharelink = Sharelink(
             auth=proxy["password"],
-            server=f'{proxy["sni"]}:{proxy["port"]}',
+            server=f'{proxy["server"]}:{proxy["port"]}',
             sni=proxy["sni"],
             name=proxy["name"],
         )

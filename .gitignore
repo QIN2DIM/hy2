@@ -162,3 +162,4 @@ masquerade/
 *.yaml
 links.txt
 tests/
+configs/

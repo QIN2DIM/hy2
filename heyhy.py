@@ -39,7 +39,7 @@ if getpass.getuser() != "root":
 base_prefix = "https://github.com/apernet/hysteria/releases/download"
 executable_name = "hysteria-linux-amd64"
 
-URL = f"{base_prefix}/app%2Fv2.4.0/{executable_name}"
+URL = f"{base_prefix}/app%2Fv2.4.4/{executable_name}"
 
 TEMPLATE_SERVICE = """
 [Unit]
@@ -295,8 +295,8 @@ class CertBot:
             sys.exit()
 
         # This operation ensures that certbot.timer is started
-        logging.info(f"运行证书续订服务 - service=certbot.timer")
-        os.system(f"systemctl daemon-reload && systemctl enable --now certbot.timer")
+        logging.info("运行证书续订服务 - service=certbot.timer")
+        os.system("systemctl daemon-reload && systemctl enable --now certbot.timer")
 
     def _run(self):
         logging.info("开始申请证书")
@@ -877,7 +877,7 @@ class Scaffold:
         service.stop()
         server_port = project.server_port
 
-        logging.info(f"正在下载 hysteria2-server")
+        logging.info("正在下载 hysteria2-server")
         service.download_server(project.workstation_dir)
 
         logging.info("正在生成默认的服务端配置")
@@ -977,7 +977,7 @@ class Scaffold:
         # 尝试释放 443 端口占用
         service.stop()
 
-        logging.info(f"正在更新 hysteria2-server")
+        logging.info("正在更新 hysteria2-server")
         service.download_server(project.workstation_dir)
 
         logging.info("正在重启系统服务")

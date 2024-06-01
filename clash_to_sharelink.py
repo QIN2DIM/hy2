@@ -43,9 +43,7 @@ def run(yaml_path: Path):
     if not yaml_path.is_file():
         yaml_path.write_text("", encoding="utf8")
         print(f"自动创建缺失的配置文件，请填写配置后重新运行脚本 - {yaml_path=}")
-        raise FileNotFoundError(
-            f"Please copy ClashMeta YAML Configuration to the {fn}"
-        )
+        raise FileNotFoundError(f"Please copy ClashMeta YAML Configuration to the {fn}")
 
     data = yaml.safe_load(yaml_path.read_text(encoding="utf8"))
     if not isinstance(data, dict):

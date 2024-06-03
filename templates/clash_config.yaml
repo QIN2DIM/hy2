@@ -1,3 +1,20 @@
+mode: rule
+mixed-port: 7890
+allow-lan: true
+log-level: info
+secret: '9@&BKUMV&JyTuDA3'  # should be shuffled
+external-controller: 0.0.0.0:9169
+tun:
+  stack: gVisor
+  device: Meta
+  auto-route: true
+  strict-route: true
+  auto-detect-interface: true
+  dns-hijack:
+  - any:53
+  - tcp://any:53
+  mtu: 9000
+  enable: false
 dns:
   enable: true
   prefer-h3: true
@@ -10,6 +27,8 @@ dns:
   nameserver-policy:
     "geosite:cn":
       - "https://223.5.5.5/dns-query#h3=true"
+proxies:
+proxy-groups:
 rules:
   - GEOSITE,category-scholar-!cn,PROXY
   - GEOSITE,category-ads-all,REJECT

@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List
 from urllib.parse import urlparse
-
+from uuid import uuid4
 import yaml
 
 links_path = Path("links.txt")
@@ -153,7 +153,7 @@ def run():
     groups = [spider_group.__dict__, select_group.__dict__]
 
     config = yaml.safe_load(template_path.read_text(encoding="utf8"))
-    config.update({"proxies": proxies, "proxy-groups": groups})
+    config.update({"proxies": proxies, "proxy-groups": groups, "secret": f"{uuid4()}"})
     output_path.write_text(yaml.safe_dump(config, sort_keys=False), encoding="utf8")
 
     print(config)

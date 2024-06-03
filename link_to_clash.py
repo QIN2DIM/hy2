@@ -36,8 +36,8 @@ class ProxyNode:
     sni: str = field(default=str)
     skip_cert_verify: bool = field(default=bool)
 
-    down: str = "200 mbps"
-    up: str = "30 mbps"
+    # down: str = "200 mbps"
+    # up: str = "30 mbps"
 
     def __post_init__(self):
         sl = f"hy2://{self.password}@{self.server}:{self.port}?sni={self.sni}#{self.name}"
@@ -100,14 +100,35 @@ class ProxyNode:
 
 
 @dataclass
-class ProxyGroup:
-    name: str = "PROXY"
-    type: str = "select"
+class BaseProxyGroup:
+    name: str
+    type: str
     proxies: List[str] = field(default_factory=list)
 
     @classmethod
-    def from_proxies(cls, proxies: List[ProxyNode], name: str = "PROXY", type_: str = "select"):
-        return cls(name=name, type=type_, proxies=[proxy_node.name for proxy_node in proxies])
+    def from_proxies(cls, proxies: List[ProxyNode], **kwargs):
+        return cls(name=cls.name, type=cls.type, proxies=[proxy_node.name for proxy_node in proxies])
+
+
+@dataclass
+class SelectProxyGroup(BaseProxyGroup):
+    name: str = "PROXY"
+    type: str = "select"
+
+
+@dataclass
+class SpiderProxyGroup(BaseProxyGroup):
+    """
+    配置一个专用于爬虫使用的代理组
+    strategy: round-robin，访问目标站点时，轮换使用组内IP
+    """
+
+    name: str = "SPIDER_ROBIN"
+    type: str = "load-balance"
+    lazy: bool = True
+    strategy: str = "round-robin"
+    url: str = "https://www.gstatic.com/generate_204"
+    interval: int = 300
 
 
 def parse_neko_links(neko_links: str) -> List[ProxyNode]:
@@ -126,10 +147,10 @@ def run():
         return
 
     proxies = parse_neko_links(neko_links_put)
-    group = ProxyGroup.from_proxies(proxies)
-
+    select_group = SelectProxyGroup.from_proxies(proxies)
+    spider_group = SpiderProxyGroup.from_proxies(proxies)
     proxies = [p.to_dict() for p in proxies]
-    groups = [group.__dict__]
+    groups = [spider_group.__dict__, select_group.__dict__]
 
     config = yaml.safe_load(template_path.read_text(encoding="utf8"))
     config.update({"proxies": proxies, "proxy-groups": groups})

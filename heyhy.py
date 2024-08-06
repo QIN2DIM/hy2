@@ -1087,7 +1087,8 @@ def run():
     subparsers.add_parser("update", help="Keep the configuration information unchanged, only update the service")
 
     edit_parser = subparsers.add_parser("edit", help="Edit the server configuration")
-    edit_parser.add_argument("--port", type=int, help="Set the port in the configuration before editing")
+    edit_parser.add_argument("--port", type=int, help="Update server port")
+    edit_parser.add_argument("--password", type=str, help="Update auth password")
     # fmt: on
 
     for c in [check_parser, install_parser]:

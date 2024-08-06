@@ -1044,19 +1044,26 @@ class Scaffold:
 
         project = Project()
         server_config = None
+        tracer = []
 
         if params.port:
             server_config = server_config or ServerConfig.from_json(project.server_config_path)
             port = str(params.port)
             port = f":{port}" if not port.startswith(":") else port
+            tracer.append(["port", server_config.listen, port])
             server_config.listen = port
         if params.password:
             server_config = server_config or ServerConfig.from_json(project.server_config_path)
             pwd = str(params.password)
+            tracer.append(["password", server_config.auth["password"], pwd])
             server_config.auth["password"] = pwd
 
         if server_config:
             server_config.to_json(project.server_config_path)
+            logging.info("配置保存成功")
+            for t in tracer:
+                logging.info(f"编辑与改动：[{t[0]}] {t[1]} --> {t[2]}")
+            logging.info("请执行 `heyhy restart` 重启服务器并应用新配置")
         else:
             edit_config(project.server_config_path)
 

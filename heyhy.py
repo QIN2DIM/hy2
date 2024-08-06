@@ -1060,9 +1060,8 @@ class Scaffold:
 
         if server_config:
             server_config.to_json(project.server_config_path)
-            logging.info("配置保存成功")
             for t in tracer:
-                logging.info(f"编辑与改动：[{t[0]}] {t[1]} --> {t[2]}")
+                logging.info(f"编辑与改动：[{t[0]}] '{t[1]}' --> '{t[2]}'")
             logging.info("请执行 `heyhy restart` 重启服务器并应用新配置")
         else:
             edit_config(project.server_config_path)

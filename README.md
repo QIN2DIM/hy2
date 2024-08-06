@@ -54,14 +54,13 @@ Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria)
    查看 [项目 WiKi](https://github.com/QIN2DIM/hy2/wiki/Usage) 获取完整的技术文档🐧 
 
    ```bash
-   $heyhy -h
+   # heyhy -h
+   usage: [-h] {install,remove,check,status,log,start,stop,restart,update} ...
    
-   usage: heyhy [-h] {install,remove,check,status,log,start,stop,restart} ...
-   
-   Hysteria-v2 Scaffold (Python3.7+)
+   Hysteria-v2 Scaffold (Python3.8+)
    
    positional arguments:
-     {install,remove,check,status,log,start,stop,restart}
+     {install,remove,check,status,log,start,stop,restart,update}
        install             Automatically install and run
        remove              Uninstall services and associated caches
        check               Print client configuration
@@ -69,7 +68,8 @@ Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria)
        log                 Check hysteria2 service syslog
        start               Start hysteria2 service
        stop                Stop hysteria2 service
-       restart             restart hysteria2 service
+       restart             Restart hysteria2 service
+       update              Keep the configuration information unchanged, only update the service
    
    optional arguments:
      -h, --help            show this help message and exit

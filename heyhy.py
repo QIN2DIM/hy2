@@ -1017,9 +1017,9 @@ def run():
     subparsers.add_parser("log", help="Check hysteria2 service syslog")
     subparsers.add_parser("start", help="Start hysteria2 service")
     subparsers.add_parser("stop", help="Stop hysteria2 service")
-    subparsers.add_parser("restart", help="restart hysteria2 service")
+    subparsers.add_parser("restart", help="Restart hysteria2 service")
 
-    subparsers.add_parser("update", help="保持配置不变，仅替换更新 hysteria2 server")
+    subparsers.add_parser("update", help="Keep the configuration information unchanged, only update the service")
 
     for c in [check_parser, install_parser]:
         c.add_argument("--server", action="store_true", help="show server config")

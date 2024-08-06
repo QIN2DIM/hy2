@@ -1,6 +1,7 @@
 """
 从节点分享链接生成 client-config.yaml
 """
+
 import sys
 from contextlib import suppress
 from pathlib import Path

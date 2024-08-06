@@ -490,8 +490,19 @@ class ServerConfig:
         )
 
     def to_json(self, sp: Path):
+        if sp.is_file():
+            sp_bak = sp.parent.joinpath(f"{sp.name}.bak")
+            shutil.copyfile(sp, sp_bak)
+
         sp.write_text(json.dumps(self.__dict__, indent=4, ensure_ascii=True))
         logging.info(f"保存服务端配置文件 - save_path={sp}")
+
+    @classmethod
+    def from_json(cls, filepath: Path):
+        if not filepath.is_file():
+            raise FileNotFoundError(f"未找到服务器配置文件 - {filepath=}")
+        server_config = json.loads(filepath.read_text(encoding="utf8"))
+        return cls(**server_config)
 
 
 @dataclass
@@ -964,8 +975,10 @@ class Scaffold:
         """
         project = Project()
         if not project.nekoray_config_path.is_file():
+            # fmt: off
             logging.error("客户端配置文件不存在，也许你是首次使用 heyhy，或你移动了client_config 的默认存储位置")
             logging.info(f"默认存储路径：{project.nekoray_config_path=}")
+            # fmt: on
             return
 
         fork_latest_download_url()
@@ -994,18 +1007,76 @@ class Scaffold:
             time.sleep(0.5)
             Scaffold.service_relay("status")
 
+    @staticmethod
+    def edit(params: argparse.Namespace):
+        def find_editor():
+            # 常用的编辑器列表,按优先顺序排序
+            editors = ["vim", "nano", "emacs", "gedit"]
+
+            # 检查环境变量
+            if "EDITOR" in os.environ:
+                return os.environ["EDITOR"]
+
+            # 检查是否安装了列表中的编辑器
+            for editor in editors:
+                try:
+                    subprocess.run(
+                        ["which", editor],
+                        check=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                    )
+                    return editor
+                except subprocess.CalledProcessError:
+                    continue
+
+            # 如果没有找到任何编辑器,返回None
+            return None
+
+        def edit_config(config_path):
+            editor = find_editor()
+            if editor:
+                os.system(f"{editor} {config_path}")
+            else:
+                print(
+                    "No suitable text editor found. Please install nano, vim, or another text editor."
+                )
+
+        project = Project()
+        server_config = None
+        tracer = []
+
+        if params.port:
+            server_config = server_config or ServerConfig.from_json(project.server_config_path)
+            port = str(params.port)
+            port = f":{port}" if not port.startswith(":") else port
+            tracer.append(["port", server_config.listen, port])
+            server_config.listen = port
+        if params.password:
+            server_config = server_config or ServerConfig.from_json(project.server_config_path)
+            pwd = str(params.password)
+            tracer.append(["password", server_config.auth["password"], pwd])
+            server_config.auth["password"] = pwd
+
+        if server_config:
+            server_config.to_json(project.server_config_path)
+            for t in tracer:
+                logging.info(f"编辑与改动：[{t[0]}] '{t[1]}' --> '{t[2]}'")
+            logging.info("请执行 `heyhy restart` 重启服务器并应用新配置")
+        else:
+            edit_config(project.server_config_path)
+
 
 def run():
-    parser = argparse.ArgumentParser(description="Hysteria-v2 Scaffold (Python3.8+)")
+    parser = argparse.ArgumentParser(description="Hysteria-v2 Scaffold (Python3.8+) T:2024-08-06")
     subparsers = parser.add_subparsers(dest="command")
 
+    # fmt: off
     install_parser = subparsers.add_parser("install", help="Automatically install and run")
     install_parser.add_argument("-d", "--domain", type=str, help="传参指定域名，否则需要在运行脚本后以交互的形式输入")
     install_parser.add_argument("--cert", type=str, help="/path/to/fullchain.pem")
     install_parser.add_argument("--key", type=str, help="/path/to/privkey.pem")
-    install_parser.add_argument(
-        "-U", "--upgrade", action="store_true", help="[DEPRECATED]下载最新版预编译文件"
-    )
+    install_parser.add_argument("-U", "--upgrade", action="store_true", help="[DEPRECATED]下载最新版预编译文件")
     install_parser.add_argument("-p", "--password", type=str, help="password")
 
     remove_parser = subparsers.add_parser("remove", help="Uninstall services and associated caches")
@@ -1020,6 +1091,11 @@ def run():
     subparsers.add_parser("restart", help="Restart hysteria2 service")
 
     subparsers.add_parser("update", help="Keep the configuration information unchanged, only update the service")
+
+    edit_parser = subparsers.add_parser("edit", help="Edit the server configuration")
+    edit_parser.add_argument("--port", type=int, help="Update server port")
+    edit_parser.add_argument("--password", type=str, help="Update auth password")
+    # fmt: on
 
     for c in [check_parser, install_parser]:
         c.add_argument("--server", action="store_true", help="show server config")
@@ -1044,6 +1120,8 @@ def run():
             Scaffold.service_relay(command)
         elif command == "update":
             Scaffold.update(params=args)
+        elif command == "edit":
+            Scaffold.edit(params=args)
         else:
             parser.print_help()
 

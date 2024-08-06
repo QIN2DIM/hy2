@@ -996,7 +996,7 @@ class Scaffold:
 
 
 def run():
-    parser = argparse.ArgumentParser(description="Hysteria-v2 Scaffold (Python3.7+)")
+    parser = argparse.ArgumentParser(description="Hysteria-v2 Scaffold (Python3.8+)")
     subparsers = parser.add_subparsers(dest="command")
 
     install_parser = subparsers.add_parser("install", help="Automatically install and run")

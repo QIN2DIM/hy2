@@ -107,7 +107,9 @@ class BaseProxyGroup:
 
     @classmethod
     def from_proxies(cls, proxies: List[ProxyNode], **kwargs):
-        return cls(name=cls.name, type=cls.type, proxies=[proxy_node.name for proxy_node in proxies])
+        return cls(
+            name=cls.name, type=cls.type, proxies=[proxy_node.name for proxy_node in proxies]
+        )
 
 
 @dataclass

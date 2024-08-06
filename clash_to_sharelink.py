@@ -4,6 +4,7 @@
 3. 运行脚本
 4. 所有 ClashMeta YAML 中的 hy2 节点信息都被转换成 sharelink 存储至当前目录的 links.txt
 """
+
 # -*- coding: utf-8 -*-
 # Time       : 2024/3/24 23:28
 # Author     : QIN2DIM

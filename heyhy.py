@@ -147,6 +147,12 @@ def get_cloudflare_reflex_link(gh_release_download_url: str) -> str:
     return gh_release_download_url
 
 
+def turn_cdn_state(state: bool):
+    global enable_cdn
+    enable_cdn = state
+    logging.info(f"CDN 状态已切换为 {state}")
+
+
 @dataclass
 class Project:
     workstation_dir = Path("/home/hysteria2")
@@ -403,6 +409,7 @@ class Service:
 
         try:
             download_url = get_cloudflare_reflex_link(URL)
+            logging.info(f"开始下载文件到 {ex_path} - download_url={download_url}")
             urlretrieve(download_url, f"{ex_path}")
             logging.info(f"下载完毕 - ex_path={ex_path}")
         except OSError:
@@ -898,12 +905,7 @@ class Scaffold:
         :param params:
         :return:
         """
-        try:
-            global enable_cdn
-            if params.enable_cdn:
-                enable_cdn = True
-        except Exception:
-            pass
+        turn_cdn_state(params.enable_cdn)
 
         (domain, server_ip) = Scaffold._validate_domain(params.domain)
         logging.info(f"域名解析成功 - domain={domain}")
@@ -1016,12 +1018,7 @@ class Scaffold:
         :param params:
         :return:
         """
-        try:
-            global enable_cdn
-            if params.enable_cdn:
-                enable_cdn = True
-        except Exception:
-            pass
+        turn_cdn_state(params.enable_cdn)
 
         project = Project()
         if not project.nekoray_config_path.is_file():
@@ -1128,7 +1125,7 @@ def run():
     install_parser.add_argument("--key", type=str, help="/path/to/privkey.pem")
     install_parser.add_argument("-U", "--upgrade", action="store_true", help="[DEPRECATED]下载最新版预编译文件")
     install_parser.add_argument("-p", "--password", type=str, help="password")
-    install_parser.add_argument("--enable-cdn", type=bool, default=False, help="Brokered downloads via Cloudflare Worker")
+    install_parser.add_argument("--enable-cdn", action="store_true", help="Brokered downloads via Cloudflare Worker")
 
     remove_parser = subparsers.add_parser("remove", help="Uninstall services and associated caches")
     remove_parser.add_argument("-d", "--domain", type=str, help="传参指定域名，否则需要在运行脚本后以交互的形式输入")
@@ -1142,7 +1139,7 @@ def run():
     subparsers.add_parser("restart", help="Restart hysteria2 service")
 
     update_parser = subparsers.add_parser("update", help="Keep the configuration information unchanged, only update the service")
-    update_parser.add_argument("--enable-cdn", type=bool, default=False, help="Brokered downloads via Cloudflare Worker")
+    update_parser.add_argument("--enable-cdn", action="store_true", help="Brokered downloads via Cloudflare Worker")
 
     edit_parser = subparsers.add_parser("edit", help="Edit the server configuration")
     edit_parser.add_argument("--port", type=int, help="Update server port")

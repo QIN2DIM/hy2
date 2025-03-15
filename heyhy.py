@@ -18,11 +18,12 @@ import socket
 import subprocess
 import sys
 import time
+import urllib.request
 from contextlib import suppress
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Literal, NoReturn, Union, Tuple, Any
-from urllib.request import urlretrieve, urlopen
+from urllib.request import urlopen
 from uuid import uuid4
 
 logging.basicConfig(
@@ -404,19 +405,35 @@ class Service:
             os.system("systemctl daemon-reload")
         return cls(path=path)
 
-    def download_server(self, workstation: Path):
+    def download_server(self, workstation: Path, retry_count=0, max_retries=5):
         ex_path = workstation.joinpath(executable_name)
 
         try:
             download_url = get_cloudflare_reflex_link(URL)
             logging.info(f"开始下载文件到 {ex_path} - download_url={download_url}")
-            urlretrieve(download_url, f"{ex_path}")
+
+            # 创建一个自定义的请求对象，添加 User-Agent 头
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            }
+            req = urllib.request.Request(download_url, headers=headers)
+
+            # 使用自定义请求对象下载文件
+            with urllib.request.urlopen(req) as response, open(ex_path, "wb") as out_file:
+                data = response.read()
+                out_file.write(data)
+
             logging.info(f"下载完毕 - ex_path={ex_path}")
-        except OSError:
-            logging.info("服务正忙，尝试停止任务...")
+        except Exception as err:
+            if retry_count >= max_retries:
+                logging.error(f"达到最大重试次数 {max_retries}，下载失败")
+                raise
+            logging.info(
+                f"服务正忙，尝试停止任务 - err={err}，重试 {retry_count + 1}/{max_retries}"
+            )
             self.stop()
-            time.sleep(0.5)
-            return self.download_server(workstation)
+            time.sleep(0.5 * (retry_count + 1))  # 逐渐增加等待时间
+            return self.download_server(workstation, retry_count + 1, max_retries)
         else:
             os.system(f"chmod +x {ex_path}")
             os.system(f"sudo setcap cap_net_bind_service=+ep {ex_path}")

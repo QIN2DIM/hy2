@@ -1183,7 +1183,7 @@ class Scaffold:
 
 
 def run():
-    parser = argparse.ArgumentParser(description="Hysteria-v2 Scaffold (Python3.8+) T:2024-08-06")
+    parser = argparse.ArgumentParser(description="Hysteria-v2 Scaffold (Python3.8+) T:2025-03-15")
     subparsers = parser.add_subparsers(dest="command")
 
     # fmt: off

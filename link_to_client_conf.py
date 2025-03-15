@@ -3,12 +3,12 @@
 """
 
 import sys
+import webbrowser
 from contextlib import suppress
 from pathlib import Path
 
-import urllib3.util
 import yaml
-import webbrowser
+from urllib3.util import parse_url
 
 links_path = Path("links.txt")
 if not links_path.exists():
@@ -30,7 +30,7 @@ def get_conf(server: str, port: str, auth: str, sni: str):
 
 def load_links():
     for link in filter(None, links_path.read_text().strip().split("\n")):
-        parser = urllib3.util.parse_url(link.strip())
+        parser = parse_url(link.strip())
         if parser.scheme not in ["hy2", "hysteria2"]:
             continue
         print(f"Load {link}")

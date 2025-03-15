@@ -36,10 +36,13 @@ if getpass.getuser() != "root":
     logging.error(" Opps~ 你需要手动切换到 root 用户运行该脚本")
     sys.exit()
 
+enable_cdn = False
+cloudflare_cdn = "https://gh-reflex.cyberspark.top"
+
 base_prefix = "https://github.com/apernet/hysteria/releases/download"
 executable_name = "hysteria-linux-amd64"
 
-URL = f"{base_prefix}/app%2Fv2.4.4/{executable_name}"
+URL = f"{base_prefix}/app%2Fv2.6.1/{executable_name}"
 
 TEMPLATE_SERVICE = """
 [Unit]
@@ -112,6 +115,38 @@ def fork_latest_download_url():
         URL = download_url
 
 
+def get_local_ip() -> dict:
+    """获取本机内网IP地址"""
+    try:
+        # 创建一个临时 socket 连接，获取本机在该连接中使用的 IP
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # 连接任意可达的外部地址，不需要真正建立连接
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+
+        # 验证是否为内网 IP
+        if (
+            ip.startswith("10.")
+            or (ip.startswith("172.") and 16 <= int(ip.split(".")[1]) <= 31)
+            or ip.startswith("192.168.")
+        ):
+            logging.info(f"定位内网 IP: {ip}")
+            return {"ip": ip, "is_local": True, "error": None}
+        else:
+            logging.info(f"定位公网 IP: {ip}")
+            return {"ip": ip, "is_local": False, "error": None}
+    except Exception as e:
+        logging.error(f"获取内网 IP 时出错: {str(e)}")
+        return {"ip": "", "is_local": None, "error": str(e)}
+
+
+def get_cloudflare_reflex_link(gh_release_download_url: str) -> str:
+    if not gh_release_download_url.startswith(cloudflare_cdn) and enable_cdn:
+        return f"{cloudflare_cdn}?url={gh_release_download_url}"
+    return gh_release_download_url
+
+
 @dataclass
 class Project:
     workstation_dir = Path("/home/hysteria2")
@@ -129,7 +164,7 @@ class Project:
     # 设置别名
     root_dir = Path(os.path.expanduser("~"))
     bash_aliases_path = root_dir.joinpath(".bashrc")
-    _remote_command = "python3 <(curl -fsSL https://ros.services/heyhy.py)"
+    _remote_command = "python3 <(curl -fsSL https://download.echosec.top/heyhy.py)"
     _alias = "heyhy"
 
     _server_ip = ""
@@ -181,6 +216,7 @@ class Project:
     @property
     def alias(self):
         # redirect to https://raw.githubusercontent.com/QIN2DIM/hy2/main/heyhy.py
+        # redirect to https://download.echosec.top/heyhy.py
         return f"alias {self._alias}='{self._remote_command}'"
 
     def set_alias(self):
@@ -366,7 +402,8 @@ class Service:
         ex_path = workstation.joinpath(executable_name)
 
         try:
-            urlretrieve(URL, f"{ex_path}")
+            download_url = get_cloudflare_reflex_link(URL)
+            urlretrieve(download_url, f"{ex_path}")
             logging.info(f"下载完毕 - ex_path={ex_path}")
         except OSError:
             logging.info("服务正忙，尝试停止任务...")
@@ -799,14 +836,7 @@ class Scaffold:
     @staticmethod
     def _validate_domain(domain: str | None) -> Union[NoReturn, Tuple[str, str]]:
         """
-        # Check dualstack: socket.getaddrinfo(DOMAIN, PORT=None)
-        # Check only IPv4: socket.gethostbyname(DOMAIN)
-        addrs = socket.getaddrinfo(domain, None)
-            for info in addrs:
-                ip = info[4][0]
-                if ":" not in ip:
-                    server_ipv4 = ip
-            server_ip = server_ipv4
+
         :param domain:
         :return: Tuple[domain, server_ip]
         """
@@ -818,23 +848,29 @@ class Scaffold:
         # 查詢傳入的域名鏈接的端點 IPv4
         try:
             server_ipv4 = socket.gethostbyname(domain)
+            logging.info(f"定位公网 IP: {server_ipv4}")
         except socket.gaierror:
             logging.error(f"域名不可达或拼写错误的域名 - domain={domain}")
 
         # 查詢本機訪問公網的 IPv4
-        response = urlopen("https://ifconfig.me")
-        my_ip = response.read().decode("utf-8") or my_ip
+        report = get_local_ip()
+        my_ip = report.get("ip", "")
 
-        # 判斷傳入的域名是否链接到本机 fixme
-        if my_ip == server_ipv4 or ":" in my_ip:
-            return domain, server_ipv4
-
-        logging.error(
-            f"你的主机外网IP与域名解析到的IP不一致 - my_ip={my_ip} domain={domain} server_ip={server_ipv4}"
-        )
+        if not report.get("error"):
+            # 获取到 IPv4 且为公网 IP
+            if report.get("is_local") is False:
+                if my_ip == server_ipv4:
+                    return domain, server_ipv4
+            # 获取到 IPv4 但为内网 IP
+            elif report.get("is_local") is True and server_ipv4:
+                return domain, server_ipv4
 
         # 域名解析错误，应当阻止用户执行安装脚本
-        sys.exit()
+        if not server_ipv4:
+            logging.error(
+                f"你的主机外网IP与域名解析到的IP不一致 - my_ip={my_ip} domain={domain} server_ip={server_ipv4}"
+            )
+            sys.exit()
 
     @staticmethod
     def _recv_stream(script: str, pipe: Literal["stdout", "stderr"] = "stdout") -> str:
@@ -862,6 +898,13 @@ class Scaffold:
         :param params:
         :return:
         """
+        try:
+            global enable_cdn
+            if params.enable_cdn:
+                enable_cdn = True
+        except Exception:
+            pass
+
         (domain, server_ip) = Scaffold._validate_domain(params.domain)
         logging.info(f"域名解析成功 - domain={domain}")
 
@@ -973,6 +1016,13 @@ class Scaffold:
         :param params:
         :return:
         """
+        try:
+            global enable_cdn
+            if params.enable_cdn:
+                enable_cdn = True
+        except Exception:
+            pass
+
         project = Project()
         if not project.nekoray_config_path.is_file():
             # fmt: off
@@ -1078,6 +1128,7 @@ def run():
     install_parser.add_argument("--key", type=str, help="/path/to/privkey.pem")
     install_parser.add_argument("-U", "--upgrade", action="store_true", help="[DEPRECATED]下载最新版预编译文件")
     install_parser.add_argument("-p", "--password", type=str, help="password")
+    install_parser.add_argument("--enable-cdn", type=bool, default=False, help="Brokered downloads via Cloudflare Worker")
 
     remove_parser = subparsers.add_parser("remove", help="Uninstall services and associated caches")
     remove_parser.add_argument("-d", "--domain", type=str, help="传参指定域名，否则需要在运行脚本后以交互的形式输入")
@@ -1090,7 +1141,8 @@ def run():
     subparsers.add_parser("stop", help="Stop hysteria2 service")
     subparsers.add_parser("restart", help="Restart hysteria2 service")
 
-    subparsers.add_parser("update", help="Keep the configuration information unchanged, only update the service")
+    update_parser = subparsers.add_parser("update", help="Keep the configuration information unchanged, only update the service")
+    update_parser.add_argument("--enable-cdn", type=bool, default=False, help="Brokered downloads via Cloudflare Worker")
 
     edit_parser = subparsers.add_parser("edit", help="Edit the server configuration")
     edit_parser.add_argument("--port", type=int, help="Update server port")

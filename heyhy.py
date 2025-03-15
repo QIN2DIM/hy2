@@ -410,7 +410,7 @@ class Service:
 
         try:
             download_url = get_cloudflare_reflex_link(URL)
-            logging.info(f"开始下载文件到 {ex_path} - download_url={download_url}")
+            logging.info(f"开始下载文件到 {ex_path}")
 
             # 创建一个自定义的请求对象，添加 User-Agent 头
             headers = {
@@ -420,8 +420,48 @@ class Service:
 
             # 使用自定义请求对象下载文件
             with urllib.request.urlopen(req) as response, open(ex_path, "wb") as out_file:
-                data = response.read()
-                out_file.write(data)
+                # 获取文件总大小（如果服务器提供）
+                file_size = int(response.headers.get("Content-Length", 0))
+
+                if file_size > 0:
+                    # 如果知道文件大小，显示进度条
+                    downloaded = 0
+                    chunk_size = 8192  # 8KB 块
+
+                    # 打印初始进度条
+                    print(f"下载进度: 0.0% [{'.' * 50}] 0/{file_size} bytes")
+
+                    while True:
+                        chunk = response.read(chunk_size)
+                        if not chunk:
+                            break
+
+                        downloaded += len(chunk)
+                        out_file.write(chunk)
+
+                        # 计算进度
+                        percent = downloaded / file_size
+                        bar_length = 50
+                        filled_length = int(bar_length * percent)
+                        bar = "=" * filled_length + "." * (bar_length - filled_length)
+
+                        # 格式化显示大小
+                        downloaded_str = self._format_size(downloaded)
+                        total_str = self._format_size(file_size)
+
+                        # 更新进度条（覆盖前一行）
+                        print(
+                            f"\r下载进度: {percent:.1%} [{bar}] {downloaded_str}/{total_str}",
+                            end="",
+                        )
+
+                    # 完成下载后换行
+                    print()
+                else:
+                    # 如果不知道文件大小，简单读取
+                    data = response.read()
+                    out_file.write(data)
+                    print(f"下载完成，文件大小: {self._format_size(len(data))}")
 
             logging.info(f"下载完毕 - ex_path={ex_path}")
         except Exception as err:
@@ -438,6 +478,17 @@ class Service:
             os.system(f"chmod +x {ex_path}")
             os.system(f"sudo setcap cap_net_bind_service=+ep {ex_path}")
             logging.info(f"授予执行权限 - ex_path={ex_path}")
+
+    def _format_size(self, size_bytes):
+        """格式化文件大小为人类可读格式"""
+        if size_bytes < 1024:
+            return f"{size_bytes} B"
+        elif size_bytes < 1024 * 1024:
+            return f"{size_bytes / 1024:.1f} KB"
+        elif size_bytes < 1024 * 1024 * 1024:
+            return f"{size_bytes / (1024 * 1024):.1f} MB"
+        else:
+            return f"{size_bytes / (1024 * 1024 * 1024):.1f} GB"
 
     def start(self):
         """部署服务之前需要先初始化服务端配置并将其写到工作空间"""

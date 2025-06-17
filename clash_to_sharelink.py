@@ -67,7 +67,7 @@ def run(yaml_path: Path):
         print(sharelink)
 
     if links:
-        links_path.write_text("\n".join(links))
+        links_path.write_text("\n".join(links), encoding="utf8")
         print("\noutput --> ", links_path.resolve())
 
 

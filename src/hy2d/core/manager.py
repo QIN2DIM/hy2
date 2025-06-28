@@ -13,6 +13,7 @@ from rich.console import Console
 from rich.syntax import Syntax
 
 from hy2d.core import constants, utils
+from hy2d.core.constants import MASQUERADE_WEBSITE
 
 
 class Hysteria2Manager:
@@ -312,6 +313,8 @@ class Hysteria2Manager:
                     "port": port,
                     "listen": "0.0.0.0",
                     "users": {f"user_{uuid.uuid4().hex[:8]}": service_password},
+                    "masquerade": MASQUERADE_WEBSITE,
+                    "alpn": ["h3", "h2", "http/1.1"],
                     "certificate": f"/etc/letsencrypt/live/{domain}/fullchain.pem",
                     "private-key": f"/etc/letsencrypt/live/{domain}/privkey.pem",
                 }
@@ -361,7 +364,7 @@ class Hysteria2Manager:
             "port": port,
             "password": service_password,
             "sni": domain,
-            "alpn": ["h3"],
+            "alpn": ["h3", "h2", "http/1.1"],
             "skip_cert_verify": False,
         }
 
@@ -567,7 +570,7 @@ class Hysteria2Manager:
                 "port": port,
                 "password": password,
                 "sni": domain,
-                "alpn": ["h3"],
+                "alpn": ["h3", "h2", "http/1.1"],
                 "skip_cert_verify": False,
             }
 

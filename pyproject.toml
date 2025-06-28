@@ -24,12 +24,6 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/hy2d"]
 
-[tool.pytest.ini_options]
-testpaths = ["tests", "examples"]
-asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
-filterwarnings = "ignore::DeprecationWarning"
-
 [tool.hatch.version]
 source = "uv-dynamic-versioning"
 
@@ -41,4 +35,6 @@ bump = true
 [dependency-groups]
 dev = [
     "black>=25.1.0",
+    "hatchling>=1.27.0",
+    "uv-dynamic-versioning>=0.8.2",
 ]

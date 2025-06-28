@@ -10,3 +10,5 @@ LISTEN_PORT = 4433
 SERVICE_IMAGE = "metacubex/mihomo:latest"
 
 MIHOMO_PROXIES_DOCS = "https://wiki.metacubex.one/config/proxies/hysteria2/#hysteria2"
+
+MASQUERADE_WEBSITE = "https://cocodataset.org/"

@@ -160,6 +160,9 @@ cython_debug/
 .idea/
 masquerade/
 *.yaml
-links.txt
+examples/links.txt
 tests/
 configs/
+examples/*.yaml
+!examples/templates/clash_config.yaml
+examples/*.txt

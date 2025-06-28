@@ -1,4 +1,4 @@
-"""AnyTLS 服务管理脚本 - 主入口"""
+"""heyhy 服务管理脚本 - 主入口"""
 
 from importlib import metadata
 
@@ -8,14 +8,17 @@ from hy2d.cli import install, log, remove, start, stop, update, check, self_
 from hy2d.logging_config import setup_logging
 
 app = typer.Typer(
-    name="anytls", help="mihomo-anytls-inbound manager", add_completion=False, no_args_is_help=False
+    name="heyhy",
+    help="mihomo-hysteria2-inbound manager",
+    add_completion=False,
+    no_args_is_help=False,
 )
 
 
 @app.callback(invoke_without_command=True)
 def main(ctx: typer.Context):
     """
-    mihomo-anytls-inbound manager
+    mihomo-hysteria2-inbound manager
     """
     setup_logging()
 
@@ -28,13 +31,13 @@ def main(ctx: typer.Context):
 @app.command()
 def version():
     """
-    Show the version of the anytls-py tool.
+    Show the version of the heyhy tool.
     """
     try:
-        v = metadata.version("anytls-py")
-        typer.echo(f"anytls-py version {v}")
+        v = metadata.version("heyhy")
+        typer.echo(f"heyhy version {v}")
     except metadata.PackageNotFoundError:
-        typer.echo("Could not determine version. Is anytls-py installed as a package?")
+        typer.echo("Could not determine version. Is heyhy installed as a package?")
         raise typer.Exit(code=1)
 
 

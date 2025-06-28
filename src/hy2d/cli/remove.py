@@ -2,15 +2,15 @@
 
 import typer
 
-from hy2d.core.manager import AnyTLSManager
+from hy2d.core.manager import Hysteria2Manager
 
-app = typer.Typer(help="停止并移除 AnyTLS 服务。")
+app = typer.Typer(help="停止并移除 Hysteria2 服务。")
 
 
 @app.callback(invoke_without_command=True)
 def remove():
     """
-    停止并移除 AnyTLS 服务。
+    停止并移除 Hysteria2 服务。
     """
-    manager = AnyTLSManager()
+    manager = Hysteria2Manager()
     manager.remove()

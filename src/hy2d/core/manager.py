@@ -1,4 +1,4 @@
-"""AnyTLS 服务核心管理逻辑"""
+"""Hysteria2 服务核心管理逻辑"""
 
 import logging
 import os
@@ -15,8 +15,8 @@ from rich.syntax import Syntax
 from hy2d.core import constants, utils
 
 
-class AnyTLSManager:
-    """封装 AnyTLS 服务管理的所有逻辑"""
+class Hysteria2Manager:
+    """封装 Hysteria2 服务管理的所有逻辑"""
 
     def __init__(self):
         """初始化管理器"""
@@ -77,8 +77,8 @@ class AnyTLSManager:
 
         with constants.DOCKER_COMPOSE_PATH.open("r") as f:
             data = yaml.safe_load(f)
-            container_name = data["services"]["anytls-inbound"]["container_name"]
-            domain = container_name.split("anytls-inbound-")[-1]
+            container_name = data["services"]["hysteria2-inbound"]["container_name"]
+            domain = container_name.split("hysteria2-inbound-")[-1]
             if not domain:
                 raise ValueError
             return domain
@@ -233,13 +233,13 @@ class AnyTLSManager:
 
         except Exception as e:
             logging.warning(f"自动开启 BBR 失败: {e}")
-            logging.warning("这通常不会影响 AnyTLS 的核心功能，但可能会影响网络性能。")
+            logging.warning("这通常不会影响 Hysteria2 的核心功能，但可能会影响网络性能。")
             logging.warning("您可以参考相关文档手动开启 BBR。")
 
     def install(
         self, domain: str, password: Optional[str], ip: Optional[str], port: int, image: str
     ):
-        """安装并启动 AnyTLS 服务"""
+        """安装并启动 Hysteria2 服务"""
         # --- 步骤 1/4: 初始检查和依赖安装 ---
         logging.info("--- 步骤 1/4: 开始环境检查与依赖安装 ---")
 
@@ -266,7 +266,7 @@ class AnyTLSManager:
 
         logging.info("--- 所有依赖均已满足 ---")
 
-        logging.info(f"--- 步骤 2/4: 开始安装 AnyTLS 服务 (域名: {domain}) ---")
+        logging.info(f"--- 步骤 2/4: 开始安装 Hysteria2 服务 (域名: {domain}) ---")
         if constants.BASE_DIR.exists():
             logging.warning(f"工作目录 {constants.BASE_DIR} 已存在。继续操作将可能覆盖现有配置。")
             if self.console.input("是否继续？ (y/n): ").lower() != "y":
@@ -307,8 +307,8 @@ class AnyTLSManager:
         mihomo_cfg_dict = {
             "listeners": [
                 {
-                    "name": f"anytls-in-{uuid.uuid4()}",
-                    "type": "anytls",
+                    "name": f"hysteria2-in-{uuid.uuid4()}",
+                    "type": "hysteria2",
                     "port": port,
                     "listen": "0.0.0.0",
                     "users": {f"user_{uuid.uuid4().hex[:8]}": service_password},
@@ -325,9 +325,9 @@ class AnyTLSManager:
         # 创建 Docker Compose 配置
         docker_compose_cfg_dict = {
             "services": {
-                "anytls-inbound": {
+                "hysteria2-inbound": {
                     "image": image,
-                    "container_name": f"anytls-inbound-{domain}",
+                    "container_name": f"hysteria2-inbound-{domain}",
                     "restart": "always",
                     "ports": [f"{port}:{port}"],
                     "working_dir": "/app/proxy-inbound/",
@@ -351,22 +351,17 @@ class AnyTLSManager:
         utils.run_command(compose_cmd + ["down"], cwd=constants.BASE_DIR, check=False)
         utils.run_command(compose_cmd + ["up", "-d"], cwd=constants.BASE_DIR)
 
-        logging.info("--- AnyTLS 服务安装并启动成功！ ---")
+        logging.info("--- Hysteria2 服务安装并启动成功！ ---")
 
         # 打印客户端配置
         client_config_dict = {
             "name": domain,
-            "type": "anytls",
+            "type": "hysteria2",
             "server": public_ip,
             "port": port,
             "password": service_password,
-            "client_fingerprint": "chrome",
-            "udp": True,
-            "idle_session_check_interval": 30,
-            "idle_session_timeout": 30,
-            "min_idle_session": 0,
             "sni": domain,
-            "alpn": ["h2", "http/1.1"],
+            "alpn": ["h3"],
             "skip_cert_verify": False,
         }
 
@@ -375,11 +370,11 @@ class AnyTLSManager:
         self.console.print(Syntax(client_yaml, "yaml"))
         self.console.print("=" * 58 + "\n")
 
-        self.console.print(f"详见客户端配置文档：{constants.MIHOMO_ANYTLS_DOCS}\n")
+        self.console.print(f"详见客户端配置文档：{constants.MIHOMO_PROXIES_DOCS}\n")
 
     def remove(self):
-        """停止并移除 AnyTLS 服务和相关文件"""
-        logging.info("--- 开始卸载 AnyTLS 服务 ---")
+        """停止并移除 Hysteria2 服务和相关文件"""
+        logging.info("--- 开始卸载 Hysteria2 服务 ---")
         if not constants.BASE_DIR.exists():
             logging.warning(f"工作目录 {constants.BASE_DIR} 不存在，可能服务未安装或已被移除。")
             return
@@ -398,23 +393,23 @@ class AnyTLSManager:
         utils.run_command(
             ["certbot", "delete", "--cert-name", domain, "--non-interactive"], check=False
         )
-        logging.info("--- AnyTLS 服务已成功卸载。 ---")
+        logging.info("--- Hysteria2 服务已成功卸载。 ---")
 
     def start(self):
         """启动服务"""
         self._ensure_service_installed()
-        logging.info("正在启动 AnyTLS 服务...")
+        logging.info("正在启动 Hysteria2 服务...")
         compose_cmd = self._get_compose_cmd()
         utils.run_command(compose_cmd + ["up", "-d"], cwd=constants.BASE_DIR)
-        logging.info("AnyTLS 服务已启动。")
+        logging.info("Hysteria2 服务已启动。")
 
     def stop(self):
         """停止服务"""
         self._ensure_service_installed()
-        logging.info("正在停止 AnyTLS 服务...")
+        logging.info("正在停止 Hysteria2 服务...")
         compose_cmd = self._get_compose_cmd()
         utils.run_command(compose_cmd + ["down"], cwd=constants.BASE_DIR)
-        logging.info("AnyTLS 服务已停止。")
+        logging.info("Hysteria2 服务已停止。")
 
     def update(self, password: Optional[str], port: Optional[int], image: Optional[str]):
         """
@@ -423,7 +418,7 @@ class AnyTLSManager:
         如果提供了参数，则更新相应的配置，然后拉取镜像并重启。
         """
         self._ensure_service_installed()
-        logging.info("--- 开始更新 AnyTLS 服务 ---")
+        logging.info("--- 开始更新 Hysteria2 服务 ---")
         config_changed = False
 
         try:
@@ -445,13 +440,13 @@ class AnyTLSManager:
             if port:
                 logging.info(f"正在更新监听端口为 {port}...")
                 mihomo_cfg["listeners"][0]["port"] = port
-                docker_compose_cfg["services"]["anytls-inbound"]["ports"] = [f"{port}:{port}"]
+                docker_compose_cfg["services"]["hysteria2-inbound"]["ports"] = [f"{port}:{port}"]
                 config_changed = True
                 logging.info(f"监听端口已在配置中更新为 {port}。")
 
             if image:
                 logging.info(f"正在更新服务镜像为 {image}...")
-                docker_compose_cfg["services"]["anytls-inbound"]["image"] = image
+                docker_compose_cfg["services"]["hysteria2-inbound"]["image"] = image
                 config_changed = True
                 logging.info(f"服务镜像已在配置中更新为 {image}。")
 
@@ -483,7 +478,7 @@ class AnyTLSManager:
         utils.run_command(compose_cmd + ["down"], cwd=constants.BASE_DIR, check=False)
         utils.run_command(compose_cmd + ["up", "-d"], cwd=constants.BASE_DIR)
 
-        logging.info("--- AnyTLS 服务更新完成。 ---")
+        logging.info("--- Hysteria2 服务更新完成。 ---")
 
         # --- 步骤 5: 显示更新后的状态 ---
         self.console.print("\n--- 更新后服务状态 ---")
@@ -499,12 +494,12 @@ class AnyTLSManager:
     def check(self):
         """检查服务状态并打印客户端配置"""
         self._ensure_service_installed()
-        self.console.print("\n--- 开始检查 AnyTLS 服务状态 ---")
+        self.console.print("\n--- 开始检查 Hysteria2 服务状态 ---")
 
         # rich Components
         from rich.table import Table
 
-        table = Table(title="AnyTLS 服务状态一览")
+        table = Table(title="Hysteria2 服务状态一览")
         table.add_column("检查项", justify="right", style="cyan", no_wrap=True)
         table.add_column("状态", style="magenta")
 
@@ -514,7 +509,7 @@ class AnyTLSManager:
             table.add_row("管理域名", domain)
 
             # 2. 检查 Docker 容器状态
-            container_name = f"anytls-inbound-{domain}"
+            container_name = f"hysteria2-inbound-{domain}"
             try:
                 result = utils.run_command(
                     [
@@ -567,17 +562,12 @@ class AnyTLSManager:
 
             client_config_dict = {
                 "name": domain,  # 'domain' from earlier in this method
-                "type": "anytls",
+                "type": "hysteria2",
                 "server": public_ip,
                 "port": port,
                 "password": password,
-                "client_fingerprint": "chrome",
-                "udp": True,
-                "idle_session_check_interval": 30,
-                "idle_session_timeout": 30,
-                "min_idle_session": 0,
                 "sni": domain,
-                "alpn": ["h2", "http/1.1"],
+                "alpn": ["h3"],
                 "skip_cert_verify": False,
             }
 
@@ -585,7 +575,7 @@ class AnyTLSManager:
             self.console.print("\n" + "=" * 20 + " 客户端配置信息[mihomo] " + "=" * 20)
             self.console.print(Syntax(client_yaml, "yaml"))
             self.console.print("=" * 58 + "\n")
-            self.console.print(f"详见客户端配置文档：{constants.MIHOMO_ANYTLS_DOCS}\n")
+            self.console.print(f"详见客户端配置文档：{constants.MIHOMO_PROXIES_DOCS}\n")
 
         except FileNotFoundError:
             self.console.print("\n[yellow]配置文件未找到，无法生成客户端配置。[/yellow]")

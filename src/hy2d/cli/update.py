@@ -5,9 +5,9 @@ from typing import Annotated, Optional
 
 import typer
 
-from hy2d.core.manager import AnyTLSManager
+from hy2d.core.manager import Hysteria2Manager
 
-app = typer.Typer(help="更新 AnyTLS 服务。默认仅拉取最新镜像并重启。也可用于更新部分服务配置。")
+app = typer.Typer(help="更新 Hysteria2 服务。默认仅拉取最新镜像并重启。也可用于更新部分服务配置。")
 
 
 @app.callback(invoke_without_command=True)
@@ -19,7 +19,7 @@ def update(
     image: Annotated[Optional[str], typer.Option("--image", help="更新服务镜像")] = None,
 ):
     """
-    更新 AnyTLS 服务。
+    更新 Hysteria2 服务。
 
     默认情况下，此命令仅会拉取最新的 Docker 镜像并重启服务。
 
@@ -38,5 +38,5 @@ def update(
         logging.error("如果您需要更改域名，请备份现有重要配置后，重新运行 `install` 命令。")
         raise typer.Exit(code=1)
 
-    manager = AnyTLSManager()
+    manager = Hysteria2Manager()
     manager.update(password=password, port=port, image=image)

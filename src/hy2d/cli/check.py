@@ -2,7 +2,7 @@
 
 import typer
 
-from hy2d.core.manager import AnyTLSManager
+from hy2d.core.manager import Hysteria2Manager
 
 app = typer.Typer(help="检查并输出配置。")
 
@@ -12,5 +12,5 @@ def check():
     """
     启动服务。
     """
-    manager = AnyTLSManager()
+    manager = Hysteria2Manager()
     manager.check()

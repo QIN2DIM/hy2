@@ -5,9 +5,9 @@ from typing import Annotated, Optional
 import typer
 
 from hy2d.core import constants
-from hy2d.core.manager import AnyTLSManager
+from hy2d.core.manager import Hysteria2Manager
 
-app = typer.Typer(help="安装并启动 AnyTLS 服务。")
+app = typer.Typer(help="安装并启动 Hysteria2 服务。")
 
 
 @app.callback(invoke_without_command=True)
@@ -26,11 +26,11 @@ def install(
         Optional[int], typer.Option("--port", help="指定监听端口 (可选，默认 8443)")
     ] = constants.LISTEN_PORT,
     image: Annotated[
-        Optional[str], typer.Option("--image", help="指定用于托管 AnyTLS server 的服务镜像")
+        Optional[str], typer.Option("--image", help="指定用于托管 Hysteria2 server 的服务镜像")
     ] = constants.SERVICE_IMAGE,
 ):
     """
-    安装并启动 AnyTLS 服务。
+    安装并启动 Hysteria2 服务。
     """
-    manager = AnyTLSManager()
+    manager = Hysteria2Manager()
     manager.install(domain=domain, password=password, ip=ip, port=port, image=image)

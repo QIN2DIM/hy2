@@ -1,0 +1,44 @@
+[project]
+name = "heyhy"
+version = "0.1.0"
+description = "mihomo-hysteria2-inbound manager"
+readme = "README.md"
+authors = [
+    { name = "QIN2DIM", email = "yaoqinse@gmail.com" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "pyyaml>=6.0.2",
+    "typer>=0.16.0",
+]
+
+
+[project.scripts]
+heyhy = "heyhy.main:app"
+
+[build-system]
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
+
+# https://hatch.pypa.io/latest/config/build/#packages
+[tool.hatch.build.targets.wheel]
+packages = ["src/heyhy"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "examples"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+filterwarnings = "ignore::DeprecationWarning"
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
+
+[tool.uv-dynamic-versioning]
+vcs = "git"
+style = "pep440"
+bump = true
+
+[dependency-groups]
+dev = [
+    "black>=25.1.0",
+]

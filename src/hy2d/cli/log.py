@@ -2,7 +2,7 @@
 
 import typer
 
-from heyhy.core.manager import AnyTLSManager
+from hy2d.core.manager import AnyTLSManager
 
 app = typer.Typer(help="查看实时日志。")
 

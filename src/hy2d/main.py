@@ -4,8 +4,8 @@ from importlib import metadata
 
 import typer
 
-from heyhy.cli import install, log, remove, start, stop, update, check, self_
-from heyhy.logging_config import setup_logging
+from hy2d.cli import install, log, remove, start, stop, update, check, self_
+from hy2d.logging_config import setup_logging
 
 app = typer.Typer(
     name="anytls", help="mihomo-anytls-inbound manager", add_completion=False, no_args_is_help=False

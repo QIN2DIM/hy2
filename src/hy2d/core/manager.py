@@ -12,7 +12,7 @@ import yaml
 from rich.console import Console
 from rich.syntax import Syntax
 
-from heyhy.core import constants, utils
+from hy2d.core import constants, utils
 
 
 class AnyTLSManager:

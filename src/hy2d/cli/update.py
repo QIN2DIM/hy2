@@ -5,7 +5,7 @@ from typing import Annotated, Optional
 
 import typer
 
-from heyhy.core.manager import AnyTLSManager
+from hy2d.core.manager import AnyTLSManager
 
 app = typer.Typer(help="更新 AnyTLS 服务。默认仅拉取最新镜像并重启。也可用于更新部分服务配置。")
 

@@ -14,7 +14,7 @@ dependencies = [
 
 
 [project.scripts]
-heyhy = "heyhy.main:app"
+heyhy = "hy2d.main:app"
 
 [build-system]
 requires = ["hatchling", "uv-dynamic-versioning"]
@@ -22,7 +22,7 @@ build-backend = "hatchling.build"
 
 # https://hatch.pypa.io/latest/config/build/#packages
 [tool.hatch.build.targets.wheel]
-packages = ["src/heyhy"]
+packages = ["src/hy2d"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "examples"]

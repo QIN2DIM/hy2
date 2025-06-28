@@ -4,8 +4,8 @@ from typing import Annotated, Optional
 
 import typer
 
-from heyhy.core import constants
-from heyhy.core.manager import AnyTLSManager
+from hy2d.core import constants
+from hy2d.core.manager import AnyTLSManager
 
 app = typer.Typer(help="安装并启动 AnyTLS 服务。")
 

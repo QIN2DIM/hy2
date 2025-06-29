@@ -84,6 +84,41 @@ class Hysteria2Manager:
                 raise ValueError
             return domain
 
+    @staticmethod
+    def _as_share_link(client_config: dict) -> str:
+        tpl = "hy2://{pwd}@{server}:{port}?sni={sni}#{alias}"
+        return tpl.format(
+            pwd=client_config.get("password", ""),
+            server=client_config.get("server", ""),
+            port=client_config.get("port", ""),
+            sni=client_config.get("sni", ""),
+            alias=client_config.get("sni", ""),
+        )
+
+    def _preview_fmt_client_config(
+        self, *, domain: str, public_ip: str, port: int | str, password: str
+    ):
+        client_config_dict = {
+            "name": domain,
+            "type": "hysteria2",
+            "server": public_ip,
+            "port": port,
+            "password": password,
+            "sni": domain,
+            "skip_cert_verify": False,
+        }
+
+        client_yaml = yaml.dump([client_config_dict], sort_keys=False)
+        share_link = self._as_share_link(client_config_dict)
+
+        self.console.print("\n" + "=" * 20 + " 客户端配置信息[mihomo] " + "=" * 20)
+        self.console.print(Syntax(client_yaml, "yaml"))
+        self.console.print("=" * 58 + "\n")
+
+        self.console.print(f"Hysteria2 分享链接：\n{share_link}\n")
+
+        self.console.print(f"详见客户端配置文档：{constants.MIHOMO_PROXIES_DOCS}\n")
+
     def _check_dependencies(self, auto_install: bool = False) -> bool:
         """
         检查 Docker 和 Docker Compose 是否安装。
@@ -277,7 +312,7 @@ class Hysteria2Manager:
         public_ip = ip or utils.get_public_ip()
         service_password = password or utils.generate_password()
 
-        logging.info(f"--- 步骤 3/4: 申请证书与生成配置 ---")
+        logging.info("--- 步骤 3/4: 申请证书与生成配置 ---")
         logging.info(f"正在为域名 {domain} 申请 Let's Encrypt 证书...")
         try:
             utils.run_command(
@@ -314,7 +349,6 @@ class Hysteria2Manager:
                     "listen": "0.0.0.0",
                     "users": {f"user_{uuid.uuid4().hex[:8]}": service_password},
                     "masquerade": MASQUERADE_WEBSITE,
-                    "alpn": ["h3", "h2", "http/1.1"],
                     "certificate": f"/etc/letsencrypt/live/{domain}/fullchain.pem",
                     "private-key": f"/etc/letsencrypt/live/{domain}/privkey.pem",
                 }
@@ -332,6 +366,7 @@ class Hysteria2Manager:
                     "image": image,
                     "container_name": f"hysteria2-inbound-{domain}",
                     "restart": "always",
+                    "network_mode": "host",
                     "ports": [f"{port}:{port}"],
                     "working_dir": "/app/proxy-inbound/",
                     "volumes": [
@@ -357,23 +392,9 @@ class Hysteria2Manager:
         logging.info("--- Hysteria2 服务安装并启动成功！ ---")
 
         # 打印客户端配置
-        client_config_dict = {
-            "name": domain,
-            "type": "hysteria2",
-            "server": public_ip,
-            "port": port,
-            "password": service_password,
-            "sni": domain,
-            "alpn": ["h3", "h2", "http/1.1"],
-            "skip_cert_verify": False,
-        }
-
-        client_yaml = yaml.dump([client_config_dict], sort_keys=False)
-        self.console.print("\n" + "=" * 20 + " 客户端配置信息[mihomo] " + "=" * 20)
-        self.console.print(Syntax(client_yaml, "yaml"))
-        self.console.print("=" * 58 + "\n")
-
-        self.console.print(f"详见客户端配置文档：{constants.MIHOMO_PROXIES_DOCS}\n")
+        self._preview_fmt_client_config(
+            domain=domain, public_ip=public_ip, port=port, password=service_password
+        )
 
     def remove(self):
         """停止并移除 Hysteria2 服务和相关文件"""
@@ -463,7 +484,7 @@ class Hysteria2Manager:
                 logging.info("配置文件保存成功。")
 
         except FileNotFoundError:
-            logging.error(f"配置文件未找到。请确认服务已正确安装。")
+            logging.error("配置文件未找到。请确认服务已正确安装。")
             sys.exit(1)
         except Exception as e:
             logging.error(f"更新配置时发生错误: {e}")
@@ -557,29 +578,12 @@ class Hysteria2Manager:
             # 从 config.yaml 获取密码和端口
             with constants.CONFIG_PATH.open("r", encoding="utf8") as f:
                 server_config = yaml.safe_load(f)
-
             listener_config = server_config["listeners"][0]
             port = listener_config["port"]
-            # users 的 key 是随机的，所以我们直接取第一个 value
             password = list(listener_config["users"].values())[0]
-
-            client_config_dict = {
-                "name": domain,  # 'domain' from earlier in this method
-                "type": "hysteria2",
-                "server": public_ip,
-                "port": port,
-                "password": password,
-                "sni": domain,
-                "alpn": ["h3", "h2", "http/1.1"],
-                "skip_cert_verify": False,
-            }
-
-            client_yaml = yaml.dump([client_config_dict], sort_keys=False)
-            self.console.print("\n" + "=" * 20 + " 客户端配置信息[mihomo] " + "=" * 20)
-            self.console.print(Syntax(client_yaml, "yaml"))
-            self.console.print("=" * 58 + "\n")
-            self.console.print(f"详见客户端配置文档：{constants.MIHOMO_PROXIES_DOCS}\n")
-
+            self._preview_fmt_client_config(
+                domain=domain, public_ip=public_ip, port=port, password=password
+            )
         except FileNotFoundError:
             self.console.print("\n[yellow]配置文件未找到，无法生成客户端配置。[/yellow]")
             self.console.print(

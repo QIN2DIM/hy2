@@ -36,7 +36,7 @@ def update():
         typer.echo("Error: `uv` command not found. Please ensure uv is installed and in your PATH.")
         raise typer.Exit(code=1)
     except subprocess.CalledProcessError as e:
-        typer.echo(f"Error updating heyhy:")
+        typer.echo("Error updating heyhy:")
         typer.echo(e.stdout)
         typer.echo(e.stderr)
         raise typer.Exit(code=1)

@@ -31,9 +31,9 @@ uv run heyhy install -d <填写域名>
 
 > 首次安装完毕后，你可以通过别名指令 `heyhy` 或 `uv run heyhy` 调度脚本。
 
-## Installation
+## What's next
 
-安装指令详解：
+**安装指令详解**
 
 ```bash
 heyhy install -d [DOMAIN]
@@ -50,27 +50,27 @@ heyhy install -d [DOMAIN]
 | `--port`           | 指定监听端口 (可选，默认 8443)                       |
 | `--image`          | 指定托管镜像（可选，默认 `metacubex/mihomo:latest`） |
 
-## What's next
-
-移除所有项目依赖：
+**移除所有项目依赖**
 
 ```bash
 heyhy remove
 ```
 
-升级脚本：
+**升级脚本**
 
 ```bash
 heyhy self update
 ```
 
-根据正在运行的服务配置生成 `mihomo client outbound` 配置：
+**输出客户端配置**
+
+根据正在运行的服务配置生成 `mihomo client outbound` 配置。
 
 ```bash
 heyhy check
 ```
 
-探索其他指令：
+**探索其他指令**
 
 ```bash
 heyhy --help

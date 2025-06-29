@@ -80,10 +80,10 @@ heyhy --help
 
 ## References
 
-- [Hysteria2](https://v2.hysteria.network/zh/docs/getting-started/Client/)，hy2 官方文档
+- [Hysteria2](https://v2.hysteria.network/zh/docs/getting-started/Client/) hy2 官方文档
 
-- [sing-box outbound - hysteria2](https://sing-box.sagernet.org/zh/configuration/outbound/hysteria2/) sing-box 客户端出站代理设置
+- [sing-box outbound](https://sing-box.sagernet.org/zh/configuration/outbound/hysteria2/) sing-box 客户端出站代理设置
 
-- [mihomo outbound - hysteria2](https://wiki.metacubex.one/config/proxies/hysteria2/#hysteria2) mihomo/clash-meta 客户端出站代理设置
+- [mihomo outbound](https://wiki.metacubex.one/config/proxies/hysteria2/#hysteria2) mihomo/clash-meta 客户端出站代理设置
 
-- [MatsuriDayo NekoRay configuration](https://matsuridayo.github.io/n-extra_core/#_5) nekoray / nekobox 客户端出战代理设置（该项目已停止维护）
+- [MatsuriDayo configuration](https://matsuridayo.github.io/n-extra_core/#_5) nekoray / nekobox 客户端出战代理设置（该项目已停止维护）

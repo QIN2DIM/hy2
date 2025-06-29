@@ -113,9 +113,11 @@ class Hysteria2Manager:
 
         self.console.print("\n" + "=" * 20 + " 客户端配置信息[mihomo] " + "=" * 20)
         self.console.print(Syntax(client_yaml, "yaml"))
-        self.console.print("=" * 58 + "\n")
 
-        self.console.print(f"Hysteria2 分享链接：\n{share_link}\n")
+        self.console.print("\n" + "=" * 20 + " Hysteria2 分享链接 " + "=" * 20)
+        self.console.print(Syntax("\n" + share_link + "\n", "markdown"))
+
+        self.console.print("=" * 58 + "\n")
 
         self.console.print(f"详见客户端配置文档：{constants.MIHOMO_PROXIES_DOCS}\n")
 

@@ -4,14 +4,14 @@ Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria)
 
 **What's features**
 
-| Supported Configuration         | Status |
-| ------------------------------- | ------ |
-| Hysteria2 server                | ✅      |
-| NekoRay client proxy            | ✅      |
-| sing-box `hy2` outbound         | ✅      |
-| Clash.Meta `hysteria2` outbound | ✅      |
-| Hysteria2 client                | ✅      |
-| via Cloudflare CDN              | ✅      |
+| Supported Configuration     | Status |
+| --------------------------- | ------ |
+| Hysteria2 server            | ✅      |
+| NekoRay client proxy        | ✅      |
+| sing-box `hy2` outbound     | ✅      |
+| Mihomo `hysteria2` outbound | ✅      |
+| Hysteria2 client            | ✅      |
+| via Cloudflare CDN          | ✅      |
 
 **Prerequisites**
 
@@ -87,3 +87,4 @@ heyhy --help
 - [mihomo outbound](https://wiki.metacubex.one/config/proxies/hysteria2/#hysteria2) mihomo/clash-meta 客户端出站代理设置
 
 - [MatsuriDayo configuration](https://matsuridayo.github.io/n-extra_core/#_5) nekoray / nekobox 客户端出战代理设置（该项目已停止维护）
+

@@ -10,99 +10,80 @@ Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria)
 | NekoRay client proxy            | ✅      |
 | sing-box `hy2` outbound         | ✅      |
 | Clash.Meta `hysteria2` outbound | ✅      |
-| Hysteria2 client                | 🚧      |
+| Hysteria2 client                | ✅      |
 | via Cloudflare CDN              | ✅      |
 
 ## Prerequisites
 
-- Python3.8+
 - 在管理员权限下运行
-- 提前为你的服务器解析一个域名 A 纪录
+- 提前为你的服务器的 IPv4 解析一个域名 A 纪录
 
 ## Get started
 
+一键部署脚本：
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh && \
+source $HOME/.local/bin/env && \
+uv tool install heyhy && \
+uv run heyhy install -d <填写域名>
+```
+
 > 首次安装完毕后，你可以通过别名指令 `heyhy` 调度脚本。
 
-1. **服务部署**
+## Installation
 
-   在交互式引导下完成部署。脚本会在任务结束后打印代理客户端配置。
-   ```shell
-   python3 <(curl -fsSL https://download.echosec.top/heyhy.py) install
-   ```
+安装指令详解：
 
-   也可以直接指定域名参数「一步到胃」：
+```bash
+heyhy install -d [DOMAIN]
+```
 
-   ```shell
-   python3 <(curl -fsSL https://download.echosec.top/heyhy.py) install -d YOUR_DOMAIN
-   ```
+| 必选参数         | 简介       |
+| ---------------- | ---------- |
+| `--domain`, `-d` | 绑定的域名 |
 
-   特殊地，如果你打算在无法直连 GitHub 的服务器上部署 hy2 server，可以使用 `--enable-cdn` 参数：
-
-   ```bash
-   python3 <(curl -fsSL https://download.echosec.top/heyhy.py) install --enable-cdn -d YOUR_DOMAIN
-   ```
-
-2. **移除负载**
-
-   这个指令会移除与 `hysteria2 server` 有关的一切依赖。需要注意的是，你必须指明与 `hysteria2 server` 绑定的域名才能安全卸载证书。
-
-   ```shell
-   python3 <(curl -fsSL https://download.echosec.top/heyhy.py) remove -d YOUR_DOMAIN
-   ```
+| 可选参数           | 简介                                                 |
+| ------------------ | ---------------------------------------------------- |
+| `--password`, `-p` | 手动指定连接密码 (可选，默认随机生成)                |
+| `--ip`             | 手动指定服务器公网 IPv4 (可选，默认自动检测)         |
+| `--port`           | 指定监听端口 (可选，默认 8443)                       |
+| `--image`          | 指定托管镜像（可选，默认 `metacubex/mihomo:latest`） |
 
 ## What's next
 
-```bash
-# heyhy
-usage: 49 [-h] {install,remove,check,status,log,start,stop,restart,update,edit} ...
-
-Hysteria-v2 Scaffold (Python3.8+) T:2025-03-15
-
-positional arguments:
-  {install,remove,check,status,log,start,stop,restart,update,edit}
-    install             Automatically install and run
-    remove              Uninstall services and associated caches
-    check               Print client configuration
-    status              Check hysteria2 service status
-    log                 Check hysteria2 service syslog
-    start               Start hysteria2 service
-    stop                Stop hysteria2 service
-    restart             Restart hysteria2 service
-    update              Keep the configuration information unchanged, only update the service
-    edit                Edit the server configuration
-
-options:
-  -h, --help            show this help message and exit
-```
-
-默认情况下会打印所有客户端配置，你可以通过可选的 `output-filter` 过滤指令仅输出 `NekoRay` / `clash-meta` / `sing-box` 的客户端出站配置：
-
-| Client                                                       | Command                                                      |
-| ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [NekoRay](https://matsuridayo.github.io/n-extra_core/)       | `python3 <(curl -fsSL https://download.echosec.top/heyhy.py) install --neko` |
-| [Clash.Meta](https://wiki.metacubex.one/config/proxies/tuic/) | `python3 <(curl -fsSL https://download.echosec.top/heyhy.py) install --clash` |
-| [sing-box](https://sing-box.sagernet.org/configuration/outbound/tuic/) | `python3 <(curl -fsSL https://download.echosec.top/heyhy.py) install --singbox` |
-
-你可以配合参数 `-d DOMAIN` 实现「一键输出」的效果，如：
+移除所有项目依赖：
 
 ```bash
-python3 <(curl -fsSL https://download.echosec.top/heyhy.py) install --singbox -d YOUR_DOMAIN
+heyhy remove
 ```
 
-首次安装后，你还可以使用别名缩写 `heyhy` 更新（覆盖）双端配置，如：
+升级脚本：
 
 ```bash
-heyhy install --singbox -d YOUR_DOMAIN
+heyhy self update
 ```
 
-所有出站配置已在 `install` 指令后生成，`output-filter` 仅影响输出到屏幕的信息，你可以用 `check` 命令去查看它们，如：
+根据正在运行的服务配置生成 `mihomo client outbound` 配置：
 
 ```bash
 heyhy check
 ```
 
-或搭配 `output-filter` 使用，效果和上文的一致：
+探索其他指令：
 
 ```bash
-heyhy check --neko
+heyhy --help
 ```
+
+![image-20250629184651534](./assets/image-20250629184651534.png)
+
+## References
+
+- [Hysteria2](https://v2.hysteria.network/zh/docs/getting-started/Client/)，hy2 官方文档
+
+- [sing-box outbound - hysteria2](https://sing-box.sagernet.org/zh/configuration/outbound/hysteria2/) sing-box 客户端出站代理设置
+
+- [mihomo outbound - hysteria2](https://wiki.metacubex.one/config/proxies/hysteria2/#hysteria2) mihomo/clash-meta 客户端出站代理设置
+
+- [MatsuriDayo NekoRay configuration](https://matsuridayo.github.io/n-extra_core/#_5) nekoray / nekobox 客户端出战代理设置（该项目已停止维护）

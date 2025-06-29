@@ -29,7 +29,7 @@ uv tool install heyhy && \
 uv run heyhy install -d <填写域名>
 ```
 
-> 首次安装完毕后，你可以通过别名指令 `heyhy` 调度脚本。
+> 首次安装完毕后，你可以通过别名指令 `heyhy` 或 `uv run heyhy` 调度脚本。
 
 ## Installation
 

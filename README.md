@@ -2,7 +2,7 @@
 
 Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria) 并输出客户端最佳实践配置。只需 15s 即可完成全自动部署，开箱即用！
 
-## What's features
+**What's features**
 
 | Supported Configuration         | Status |
 | ------------------------------- | ------ |
@@ -13,14 +13,14 @@ Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria)
 | Hysteria2 client                | ✅      |
 | via Cloudflare CDN              | ✅      |
 
-## Prerequisites
+**Prerequisites**
 
 - 在管理员权限下运行
 - 提前为你的服务器的 IPv4 解析一个域名 A 纪录
 
 ## Get started
 
-一键部署脚本：
+一键部署脚本，以 `uv tool` 的方式调度管理工具
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh && \

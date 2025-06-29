@@ -1,6 +1,6 @@
 # Heyhy <a href = "https://t.me/+V1rQL8WFTNxiMjRh"><img src="https://img.shields.io/static/v1?style=social&logo=telegram&label=chat&message=studio" ></a>
 
-Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria) 并输出客户端最佳实践配置。只需 15s 即可完成全自动部署，开箱即用！
+Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria) 并输出客户端最佳实践配置，开箱即用！
 
 **What's features**
 
@@ -20,7 +20,7 @@ Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria)
 
 ## Get started
 
-一键部署脚本，以 `uv tool` 的方式调度管理工具
+一键部署脚本，以 `uv tool` 的方式调度管理工具：
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh && \

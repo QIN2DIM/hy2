@@ -211,7 +211,7 @@ class Hysteria2Manager:
         检查并尝试开启 BBR 拥塞控制算法。
         这是一个尽力而为的操作，任何失败都不会中断主安装流程。
         """
-        logging.info("正在检查并尝试开启 BBR...")
+        logging.info("正在检查并尝试开启 BBR+Cake...")
         try:
             # 1. 检查 BBR 是否已经开启
             qdisc_res = utils.run_command(
@@ -227,31 +227,31 @@ class Hysteria2Manager:
                 skip_execution_logging=True,
             )
 
-            qdisc_ok = qdisc_res.returncode == 0 and "fq" in qdisc_res.stdout
+            qdisc_ok = qdisc_res.returncode == 0 and "cake" in qdisc_res.stdout
             tcp_cong_ok = tcp_cong_res.returncode == 0 and "bbr" in tcp_cong_res.stdout
 
             if qdisc_ok and tcp_cong_ok:
-                logging.info("BBR 已成功开启。")
+                logging.info("BBR+Cake 已成功开启。")
                 return
 
-            logging.info("检测到 BBR 未开启或未完全开启，将尝试自动配置。")
+            logging.info("检测到 BBR+Cake 未开启或未完全开启，将尝试自动配置。")
             self.console.print("此操作需要 [bold yellow]sudo[/bold yellow] 权限来修改系统配置。")
 
             # 2. 写入配置
-            bbr_config = {"net.core.default_qdisc": "fq", "net.ipv4.tcp_congestion_control": "bbr"}
+            bbr_config = {"net.core.default_qdisc": "cake", "net.ipv4.tcp_congestion_control": "bbr"}
             for key, value in bbr_config.items():
                 cmd = f"grep -qxF '{key}={value}' /etc/sysctl.conf || echo '{key}={value}' | sudo tee -a /etc/sysctl.conf > /dev/null"
                 utils.run_command(
                     ["bash", "-c", cmd], propagate_exception=True, skip_execution_logging=True
                 )
-            logging.info("BBR 配置已写入 /etc/sysctl.conf。")
+            logging.info("BBR+Cake 配置已写入 /etc/sysctl.conf。")
 
             # 3. 应用配置
             logging.info("正在应用新的 sysctl 配置...")
             utils.run_command(["sudo", "sysctl", "-p"], propagate_exception=True)
 
             # 4. 再次检查
-            logging.info("正在验证 BBR 是否成功开启...")
+            logging.info("正在验证 BBR+Cake 是否成功开启...")
             qdisc_res_after = utils.run_command(
                 ["sysctl", "net.core.default_qdisc"], capture_output=True, propagate_exception=True
             )
@@ -261,10 +261,10 @@ class Hysteria2Manager:
                 propagate_exception=True,
             )
 
-            if "fq" in qdisc_res_after.stdout and "bbr" in tcp_cong_res_after.stdout:
-                logging.info("BBR 成功开启！")
+            if "cake" in qdisc_res_after.stdout and "bbr" in tcp_cong_res_after.stdout:
+                logging.info("BBR+Cake 成功开启！")
             else:
-                logging.warning("BBR 配置已应用，但验证未完全成功。可能需要重启系统才能生效。")
+                logging.warning("BBR+Cake 配置已应用，但验证未完全成功。可能需要重启系统才能生效。")
                 logging.warning(
                     f"当前 qdisc: {qdisc_res_after.stdout.strip()}, tcp_congestion_control: {tcp_cong_res_after.stdout.strip()}"
                 )

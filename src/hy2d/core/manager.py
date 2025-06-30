@@ -1,4 +1,4 @@
-"""Hysteria2 服务核心管理逻辑"""
+"""服务核心管理逻辑"""
 
 import logging
 import os
@@ -9,15 +9,22 @@ import uuid
 from typing import Optional
 
 import yaml
+from hy2d.core import constants, utils
+from hy2d.core.constants import (
+    TOOL_NAME,
+    MASQUERADE_WEBSITE,
+    COMPOSE_SERVICE_NAME,
+    COMPOSE_CONTAINER_PREFIX,
+    MIHOMO_LISTEN_TYPE,
+    MIHOMO_LISTENER_NAME_PREFIX,
+    DEFAULT_CLIENT_CONFIG,
+)
 from rich.console import Console
 from rich.syntax import Syntax
 
-from hy2d.core import constants, utils
-from hy2d.core.constants import MASQUERADE_WEBSITE
-
 
 class Hysteria2Manager:
-    """封装 Hysteria2 服务管理的所有逻辑"""
+    """封装服务管理的所有逻辑"""
 
     def __init__(self):
         """初始化管理器"""
@@ -78,8 +85,8 @@ class Hysteria2Manager:
 
         with constants.DOCKER_COMPOSE_PATH.open("r") as f:
             data = yaml.safe_load(f)
-            container_name = data["services"]["hysteria2-inbound"]["container_name"]
-            domain = container_name.split("hysteria2-inbound-")[-1]
+            container_name = data["services"][COMPOSE_SERVICE_NAME]["container_name"]
+            domain = container_name.split(COMPOSE_CONTAINER_PREFIX)[-1]
             if not domain:
                 raise ValueError
             return domain
@@ -98,18 +105,13 @@ class Hysteria2Manager:
     def _preview_fmt_client_config(
         self, *, domain: str, public_ip: str, port: int | str, password: str
     ):
-        client_config_dict = {
-            "name": domain,
-            "type": "hysteria2",
-            "server": public_ip,
-            "port": port,
-            "password": password,
-            "sni": domain,
-            "skip_cert_verify": False,
-        }
+        runtime_config = DEFAULT_CLIENT_CONFIG.copy()
+        runtime_config.update(
+            {"name": domain, "server": public_ip, "port": port, "password": password, "sni": domain}
+        )
 
-        client_yaml = yaml.dump([client_config_dict], sort_keys=False)
-        share_link = self._as_share_link(client_config_dict)
+        client_yaml = yaml.dump([runtime_config], sort_keys=False)
+        share_link = self._as_share_link(runtime_config)
 
         self.console.print("\n" + "=" * 21 + " Mihomo 客户端配置 " + "=" * 21)
         self.console.print(Syntax(client_yaml, "yaml"))
@@ -152,7 +154,8 @@ class Hysteria2Manager:
             # 在这种未知错误下，我们应该退出而不是继续
             sys.exit(1)
 
-    def _check_certbot(self, auto_install: bool = False) -> bool:
+    @staticmethod
+    def _check_certbot(auto_install: bool = False) -> bool:
         """
         检查 Certbot 是否安装，并根据需要自动安装。
         采用 Certbot 官方推荐的 Snap 方式安装，以确保版本最新并能自动续期。
@@ -238,7 +241,10 @@ class Hysteria2Manager:
             self.console.print("此操作需要 [bold yellow]sudo[/bold yellow] 权限来修改系统配置。")
 
             # 2. 写入配置
-            bbr_config = {"net.core.default_qdisc": "cake", "net.ipv4.tcp_congestion_control": "bbr"}
+            bbr_config = {
+                "net.core.default_qdisc": "cake",
+                "net.ipv4.tcp_congestion_control": "bbr",
+            }
             for key, value in bbr_config.items():
                 cmd = f"grep -qxF '{key}={value}' /etc/sysctl.conf || echo '{key}={value}' | sudo tee -a /etc/sysctl.conf > /dev/null"
                 utils.run_command(
@@ -271,13 +277,13 @@ class Hysteria2Manager:
 
         except Exception as e:
             logging.warning(f"自动开启 BBR 失败: {e}")
-            logging.warning("这通常不会影响 Hysteria2 的核心功能，但可能会影响网络性能。")
+            logging.warning(f"这通常不会影响 {TOOL_NAME} 的核心功能，但可能会影响网络性能。")
             logging.warning("您可以参考相关文档手动开启 BBR。")
 
     def install(
         self, domain: str, password: Optional[str], ip: Optional[str], port: int, image: str
     ):
-        """安装并启动 Hysteria2 服务"""
+        """安装并启动服务"""
         # --- 步骤 1/4: 初始检查和依赖安装 ---
         logging.info("--- 步骤 1/4: 开始环境检查与依赖安装 ---")
 
@@ -304,7 +310,7 @@ class Hysteria2Manager:
 
         logging.info("--- 所有依赖均已满足 ---")
 
-        logging.info(f"--- 步骤 2/4: 开始安装 Hysteria2 服务 (域名: {domain}) ---")
+        logging.info(f"--- 步骤 2/4: 开始安装 {TOOL_NAME} 服务 (域名: {domain}) ---")
         if constants.BASE_DIR.exists():
             logging.warning(f"工作目录 {constants.BASE_DIR} 已存在。继续操作将可能覆盖现有配置。")
             if self.console.input("是否继续？ (y/n): ").lower() != "y":
@@ -345,8 +351,8 @@ class Hysteria2Manager:
         mihomo_cfg_dict = {
             "listeners": [
                 {
-                    "name": f"hysteria2-in-{uuid.uuid4()}",
-                    "type": "hysteria2",
+                    "name": f"{MIHOMO_LISTENER_NAME_PREFIX}{uuid.uuid4()}",
+                    "type": MIHOMO_LISTEN_TYPE,
                     "port": port,
                     "listen": "0.0.0.0",
                     "users": {f"user_{uuid.uuid4().hex[:8]}": service_password},
@@ -361,15 +367,13 @@ class Hysteria2Manager:
             yaml.dump(mihomo_cfg_dict, f, sort_keys=False)
         logging.info(f"已生成配置文件: {constants.CONFIG_PATH}")
 
-        # 创建 Docker Compose 配置
         docker_compose_cfg_dict = {
             "services": {
-                "hysteria2-inbound": {
+                COMPOSE_SERVICE_NAME: {
                     "image": image,
-                    "container_name": f"hysteria2-inbound-{domain}",
+                    "container_name": f"{COMPOSE_CONTAINER_PREFIX}{domain}",
                     "restart": "always",
                     "network_mode": "host",
-                    "ports": [f"{port}:{port}"],
                     "working_dir": "/app/proxy-inbound/",
                     "volumes": [
                         "/etc/letsencrypt/:/etc/letsencrypt/",
@@ -391,7 +395,7 @@ class Hysteria2Manager:
         utils.run_command(compose_cmd + ["down"], cwd=constants.BASE_DIR, check=False)
         utils.run_command(compose_cmd + ["up", "-d"], cwd=constants.BASE_DIR)
 
-        logging.info("--- Hysteria2 服务安装并启动成功！ ---")
+        logging.info(f"--- {TOOL_NAME} 服务安装并启动成功！ ---")
 
         # 打印客户端配置
         self._preview_fmt_client_config(
@@ -399,8 +403,8 @@ class Hysteria2Manager:
         )
 
     def remove(self):
-        """停止并移除 Hysteria2 服务和相关文件"""
-        logging.info("--- 开始卸载 Hysteria2 服务 ---")
+        """停止并移除服务和相关文件"""
+        logging.info(f"--- 开始卸载 {TOOL_NAME} 服务 ---")
         if not constants.BASE_DIR.exists():
             logging.warning(f"工作目录 {constants.BASE_DIR} 不存在，可能服务未安装或已被移除。")
             return
@@ -419,23 +423,23 @@ class Hysteria2Manager:
         utils.run_command(
             ["certbot", "delete", "--cert-name", domain, "--non-interactive"], check=False
         )
-        logging.info("--- Hysteria2 服务已成功卸载。 ---")
+        logging.info(f"--- {TOOL_NAME} 服务已成功卸载。 ---")
 
     def start(self):
         """启动服务"""
         self._ensure_service_installed()
-        logging.info("正在启动 Hysteria2 服务...")
+        logging.info(f"正在启动 {TOOL_NAME} 服务...")
         compose_cmd = self._get_compose_cmd()
         utils.run_command(compose_cmd + ["up", "-d"], cwd=constants.BASE_DIR)
-        logging.info("Hysteria2 服务已启动。")
+        logging.info(f"{TOOL_NAME} 服务已启动。")
 
     def stop(self):
         """停止服务"""
         self._ensure_service_installed()
-        logging.info("正在停止 Hysteria2 服务...")
+        logging.info(f"正在停止 {TOOL_NAME} 服务...")
         compose_cmd = self._get_compose_cmd()
         utils.run_command(compose_cmd + ["down"], cwd=constants.BASE_DIR)
-        logging.info("Hysteria2 服务已停止。")
+        logging.info(f"{TOOL_NAME} 服务已停止。")
 
     def update(self, password: Optional[str], port: Optional[int], image: Optional[str]):
         """
@@ -444,7 +448,7 @@ class Hysteria2Manager:
         如果提供了参数，则更新相应的配置，然后拉取镜像并重启。
         """
         self._ensure_service_installed()
-        logging.info("--- 开始更新 Hysteria2 服务 ---")
+        logging.info(f"--- 开始更新 {TOOL_NAME} 服务 ---")
         config_changed = False
 
         try:
@@ -466,13 +470,13 @@ class Hysteria2Manager:
             if port:
                 logging.info(f"正在更新监听端口为 {port}...")
                 mihomo_cfg["listeners"][0]["port"] = port
-                docker_compose_cfg["services"]["hysteria2-inbound"]["ports"] = [f"{port}:{port}"]
+                docker_compose_cfg["services"][COMPOSE_SERVICE_NAME]["ports"] = [f"{port}:{port}"]
                 config_changed = True
                 logging.info(f"监听端口已在配置中更新为 {port}。")
 
             if image:
                 logging.info(f"正在更新服务镜像为 {image}...")
-                docker_compose_cfg["services"]["hysteria2-inbound"]["image"] = image
+                docker_compose_cfg["services"][COMPOSE_SERVICE_NAME]["image"] = image
                 config_changed = True
                 logging.info(f"服务镜像已在配置中更新为 {image}。")
 
@@ -504,7 +508,7 @@ class Hysteria2Manager:
         utils.run_command(compose_cmd + ["down"], cwd=constants.BASE_DIR, check=False)
         utils.run_command(compose_cmd + ["up", "-d"], cwd=constants.BASE_DIR)
 
-        logging.info("--- Hysteria2 服务更新完成。 ---")
+        logging.info(f"--- {TOOL_NAME} 服务更新完成。 ---")
 
         # --- 步骤 5: 显示更新后的状态 ---
         self.console.print("\n--- 更新后服务状态 ---")
@@ -520,12 +524,12 @@ class Hysteria2Manager:
     def check(self):
         """检查服务状态并打印客户端配置"""
         self._ensure_service_installed()
-        self.console.print("\n--- 开始检查 Hysteria2 服务状态 ---")
+        self.console.print(f"\n--- 开始检查 {TOOL_NAME} 服务状态 ---")
 
         # rich Components
         from rich.table import Table
 
-        table = Table(title="Hysteria2 服务状态一览")
+        table = Table(title=f"{TOOL_NAME} 服务状态一览")
         table.add_column("检查项", justify="right", style="cyan", no_wrap=True)
         table.add_column("状态", style="magenta")
 
@@ -535,7 +539,7 @@ class Hysteria2Manager:
             table.add_row("管理域名", domain)
 
             # 2. 检查 Docker 容器状态
-            container_name = f"hysteria2-inbound-{domain}"
+            container_name = f"{COMPOSE_CONTAINER_PREFIX}{domain}"
             try:
                 result = utils.run_command(
                     [

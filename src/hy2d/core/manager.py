@@ -111,7 +111,7 @@ class Hysteria2Manager:
         client_yaml = yaml.dump([client_config_dict], sort_keys=False)
         share_link = self._as_share_link(client_config_dict)
 
-        self.console.print("\n" + "=" * 20 + " 客户端配置信息[mihomo] " + "=" * 20)
+        self.console.print("\n" + "=" * 21 + " Mihomo 客户端配置 " + "=" * 21)
         self.console.print(Syntax(client_yaml, "yaml"))
 
         self.console.print("\n" + "=" * 20 + " Hysteria2 分享链接 " + "=" * 20)

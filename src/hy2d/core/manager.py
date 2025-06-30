@@ -18,6 +18,7 @@ from hy2d.core.constants import (
     MIHOMO_LISTEN_TYPE,
     MIHOMO_LISTENER_NAME_PREFIX,
     DEFAULT_CLIENT_CONFIG,
+    SHARE_LINK_TPL,
 )
 from rich.console import Console
 from rich.syntax import Syntax
@@ -93,8 +94,7 @@ class Hysteria2Manager:
 
     @staticmethod
     def _as_share_link(client_config: dict) -> str:
-        tpl = "hy2://{pwd}@{server}:{port}?sni={sni}#{alias}"
-        return tpl.format(
+        return SHARE_LINK_TPL.format(
             pwd=client_config.get("password", ""),
             server=client_config.get("server", ""),
             port=client_config.get("port", ""),
@@ -116,7 +116,7 @@ class Hysteria2Manager:
         self.console.print("\n" + "=" * 21 + " Mihomo 客户端配置 " + "=" * 21)
         self.console.print(Syntax(client_yaml, "yaml"))
 
-        self.console.print("\n" + "=" * 20 + " Hysteria2 分享链接 " + "=" * 20)
+        self.console.print("\n" + "=" * 20 + f" {TOOL_NAME} 分享链接 " + "=" * 20)
         self.console.print(Syntax("\n" + share_link + "\n", "markdown"))
 
         self.console.print("=" * 58 + "\n")

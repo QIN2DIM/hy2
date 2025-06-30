@@ -20,6 +20,8 @@ COMPOSE_CONTAINER_PREFIX = f"{COMPOSE_SERVICE_NAME}-"
 MIHOMO_LISTEN_TYPE = "hysteria2"
 MIHOMO_LISTENER_NAME_PREFIX = f"{MIHOMO_LISTEN_TYPE}-in-"
 
+SHARE_LINK_TPL = "hy2://{pwd}@{server}:{port}?sni={sni}#{alias}"
+
 DEFAULT_CLIENT_CONFIG = {
     "name": "{{DOMAIN}}",
     "type": MIHOMO_LISTEN_TYPE,

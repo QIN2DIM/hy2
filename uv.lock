@@ -96,7 +96,7 @@ wheels = [
 
 [[package]]
 name = "heyhy"
-version = "0.1.8"
+version = "0.1.9.post1"
 source = { editable = "." }
 dependencies = [
     { name = "pyyaml" },

@@ -24,8 +24,9 @@ Heyhy 用于快速部署 [hysteria2 server](https://github.com/apernet/hysteria)
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh && \
-source $HOME/.local/bin/env && \
+source $HOME/.local/bin/env ; \
 uv tool install heyhy && \
+uv run heyhy self update && \
 uv run heyhy install -d <填写域名>
 ```
 

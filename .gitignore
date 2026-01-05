@@ -160,9 +160,10 @@ cython_debug/
 .idea/
 masquerade/
 *.yaml
-examples/links.txt
+scripts/links.txt
 tests/
 configs/
-examples/*.yaml
-!examples/templates/clash_config.yaml
-examples/*.txt
+scripts/*.yaml
+!scripts/templates/clash_config.yaml
+scripts/*.txt
+scripts/surge_config.conf
